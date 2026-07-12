@@ -4,15 +4,12 @@
   "private": true,
   "description": "Root workspace of con-27 Global Nursing Conference 2027",
   "scripts": {
-    "dev:backend": "pnpm --filter con-27-backend dev",
+    "dev:backend": "cd backend && uvicorn main:app --reload --port 5000",
     "dev:frontend": "pnpm --filter con-27-frontend dev",
-    "dev": "pnpm run --parallel dev:backend dev:frontend",
-    "build:backend": "pnpm --filter con-27-backend build",
+    "dev": "pnpm run dev:frontend",
+    "build:backend": "echo \"Python backend does not require compilation\"",
     "build:frontend": "pnpm --filter con-27-frontend build",
-    "build": "pnpm run build:backend && pnpm run build:frontend",
-    "db:migrate": "pnpm --filter con-27-backend db:migrate",
-    "db:seed": "pnpm --filter con-27-backend db:seed",
-    "db:studio": "pnpm --filter con-27-backend db:studio"
+    "build": "pnpm run build:frontend"
   },
   "devDependencies": {}
 }

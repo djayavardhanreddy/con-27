@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Container, Group, Button, Drawer, Burger, ActionIcon, useMantineColorScheme } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { IconSun, IconMoon, IconStethoscope } from '@tabler/icons-react';
+import { IconSun, IconMoon } from '@tabler/icons-react';
 
 interface HeaderProps {
   onOpenBrochure: () => void;
@@ -81,11 +81,11 @@ export default function Header({ onOpenBrochure, onOpenAbstract }: HeaderProps) 
         <Group justify="space-between" align="center">
           {/* Logo */}
           <Group gap="xs" style={{ cursor: 'pointer' }} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <IconStethoscope size={30} color="#0077ff" />
-            <div style={{ fontFamily: 'var(--font-title)', fontWeight: 800, fontSize: '20px', letterSpacing: '-0.5px' }}>
-              <span style={{ color: '#0077ff' }}>GNC</span>
-              <span style={{ color: scrolled ? (colorScheme === 'dark' ? '#fff' : '#0c1a30') : '#fff' }}>2027</span>
-            </div>
+            <img 
+              src={colorScheme === 'dark' ? '/logo_dark.png' : '/logo_light.png'} 
+              alt="Syntrophy Global Health Logo" 
+              style={{ height: '48px', objectFit: 'contain' }} 
+            />
           </Group>
 
           {/* Desktop Navigation Links */}
@@ -99,7 +99,7 @@ export default function Header({ onOpenBrochure, onOpenAbstract }: HeaderProps) 
                   root: {
                     color: scrolled
                       ? 'var(--color-text-dark)'
-                      : (colorScheme === 'dark' ? '#fff' : '#fff'),
+                      : (colorScheme === 'dark' ? '#fff' : '#0c1a30'),
                     fontWeight: 500,
                     fontSize: '14px',
                     fontFamily: 'var(--font-sans)',
@@ -125,7 +125,7 @@ export default function Header({ onOpenBrochure, onOpenAbstract }: HeaderProps) 
               radius="md"
               color={scrolled ? 'blue' : 'gray'}
             >
-              {colorScheme === 'dark' ? <IconSun size={20} color={scrolled ? undefined : '#fff'} /> : <IconMoon size={20} color={scrolled ? undefined : '#fff'} />}
+              {colorScheme === 'dark' ? <IconSun size={20} color={scrolled ? undefined : '#fff'} /> : <IconMoon size={20} color={scrolled ? undefined : '#0c1a30'} />}
             </ActionIcon>
 
             <Button
@@ -141,7 +141,7 @@ export default function Header({ onOpenBrochure, onOpenAbstract }: HeaderProps) 
               Register Now
             </Button>
 
-            <Burger opened={opened} onClick={toggle} hiddenFrom="lg" size="sm" color={scrolled ? undefined : '#fff'} />
+            <Burger opened={opened} onClick={toggle} hiddenFrom="lg" size="sm" color={scrolled ? undefined : (colorScheme === 'dark' ? '#fff' : '#0c1a30')} />
           </Group>
         </Group>
       </Container>

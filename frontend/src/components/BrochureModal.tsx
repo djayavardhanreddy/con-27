@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
 import { notifications } from '@mantine/notifications';
-import api from '../services/api';
+import { db } from '../services/db';
 import { IconCheck, IconInfoCircle } from '@tabler/icons-react';
 
 const brochureSchema = z.object({
@@ -41,8 +41,13 @@ export default function BrochureModal({ opened, onClose }: BrochureModalProps) {
 
   const downloadMutation = useMutation({
     mutationFn: async (data: BrochureFormData) => {
-      const response = await api.post('/brochure', data);
-      return response.data;
+      const newLead = {
+        id: crypto.randomUUID(),
+        ...data,
+        createdAt: new Date().toISOString()
+      };
+      await db.brochureDownloads.add(newLead);
+      return newLead;
     },
     onSuccess: () => {
       notifications.show({
@@ -63,11 +68,10 @@ export default function BrochureModal({ opened, onClose }: BrochureModalProps) {
       reset();
       onClose();
     },
-    onError: (error: any) => {
-      const errorMsg = error.response?.data?.message || 'Failed to submit brochure request';
+    onError: () => {
       notifications.show({
         title: 'Error',
-        message: errorMsg,
+        message: 'Failed to record download request.',
         color: 'red'
       });
     }

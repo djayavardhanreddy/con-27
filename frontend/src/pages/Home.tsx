@@ -1,14 +1,17 @@
 import { useState } from 'react';
 import {
-  Container, SimpleGrid, Title, Text, Button, Accordion, Stack, Paper, Group, TextInput, Textarea, Tabs, Box, Image, AspectRatio, Card
+  Container, SimpleGrid, Title, Text, Button, Accordion, Stack, Paper, Group, TextInput, Textarea, Tabs, Box, Image, AspectRatio, Card, useMantineColorScheme
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { notifications } from '@mantine/notifications';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db } from '../services/db';
 
 import Header from '../components/Header';
 import Hero from '../components/Hero';
@@ -18,7 +21,6 @@ import RegistrationForm from '../components/RegistrationForm';
 import BrochureModal from '../components/BrochureModal';
 import AbstractModal from '../components/AbstractModal';
 import Footer from '../components/Footer';
-import api from '../services/api';
 
 import {
   IconShieldLock, IconSchool, IconBrain, IconUserCheck, IconLeaf, IconUsersGroup, IconAlertTriangle, IconFlame,
@@ -37,6 +39,7 @@ const contactSchema = z.object({
 type ContactFormData = z.infer<typeof contactSchema>;
 
 export default function Home() {
+  const { colorScheme } = useMantineColorScheme();
   const [brochureOpened, { open: openBrochure, close: closeBrochure }] = useDisclosure(false);
   const [abstractOpened, { open: openAbstract, close: closeAbstract }] = useDisclosure(false);
   const [galleryCategory, setGalleryCategory] = useState<string>('ALL');
@@ -46,116 +49,23 @@ export default function Home() {
     defaultValues: { name: '', email: '', phone: '', subject: '', message: '' }
   });
 
-  // Queries to load data
-  const { data: speakers = [] } = useQuery({
-    queryKey: ['speakers'],
-    queryFn: async () => {
-      const response = await api.get('/content/speakers');
-      return response.data;
-    },
-    initialData: [
-      {
-        id: '1',
-        name: 'Dr. Evelyn Carter',
-        designation: 'Professor of Nursing Informatics',
-        organization: 'Johns Hopkins School of Nursing',
-        country: 'United States',
-        imagePath: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=400',
-        bio: '', twitter: 'https://twitter.com', linkedin: 'https://linkedin.com'
-      },
-      {
-        id: '2',
-        name: 'Prof. Giovanni Rossi',
-        designation: 'Director of Cardiology & Nursing Care',
-        organization: 'Sapienza University of Rome',
-        country: 'Italy',
-        imagePath: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=400',
-        bio: '', twitter: 'https://twitter.com', linkedin: 'https://linkedin.com'
-      },
-      {
-        id: '3',
-        name: 'Dr. Sarah Jenkins',
-        designation: 'Consultant in Midwifery & Neonatal Care',
-        organization: 'King\'s College London',
-        country: 'United Kingdom',
-        imagePath: 'https://images.unsplash.com/photo-1594824813573-246434de83fb?auto=format&fit=crop&q=80&w=400',
-        bio: '', twitter: 'https://twitter.com', linkedin: 'https://linkedin.com'
-      },
-      {
-        id: '4',
-        name: 'Amina Al-Mansoor',
-        designation: 'Lead Advisor on Global Health Policy',
-        organization: 'World Health Organization (WHO)',
-        country: 'Switzerland',
-        imagePath: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400',
-        bio: '', twitter: 'https://twitter.com', linkedin: 'https://linkedin.com'
-      }
-    ]
-  });
-
-  const { data: agenda = [] } = useQuery({
-    queryKey: ['agenda'],
-    queryFn: async () => {
-      const response = await api.get('/content/agenda');
-      return response.data;
-    },
-    initialData: [
-      { id: '1', day: 1, timeSlot: '08:00 AM - 09:00 AM', title: 'Registration & Welcome Coffee', type: 'BREAK', location: 'Lobby & Exhibition Hall' },
-      { id: '2', day: 1, timeSlot: '09:00 AM - 09:30 AM', title: 'Inaugural Ceremony & Opening Address', type: 'KEYNOTE', location: 'Main Auditorium (Hall A)', speakerName: 'Conference Chairman' },
-      { id: '3', day: 1, timeSlot: '09:30 AM - 10:30 AM', title: 'Keynote: The Internet of Medical Things (IoMT) in Bedside Care', type: 'KEYNOTE', location: 'Main Auditorium (Hall A)', speakerName: 'Dr. Evelyn Carter', description: 'Examining clinical integrations of wearables and EHR tracking.' },
-      { id: '4', day: 1, timeSlot: '11:00 AM - 12:30 PM', title: 'Panel: Cybersecurity and AI in Modern Healthcare Systems', type: 'PANEL', location: 'Main Auditorium (Hall A)', speakerName: 'Dr. Carter, Amina Al-Mansoor, Prof. Rossi' },
-      { id: '5', day: 2, timeSlot: '09:00 AM - 10:30 AM', title: 'Keynote: Maternal & Child Health Milestones & Primary Care', type: 'KEYNOTE', location: 'Main Auditorium (Hall A)', speakerName: 'Dr. Sarah Jenkins' },
-      { id: '6', day: 2, timeSlot: '11:00 AM - 12:30 PM', title: 'Oral Presentations: Scaling Local Innovations in Nursing', type: 'SESSION', location: 'Seminar Room B' }
-    ]
-  });
-
-  const { data: faqs = [] } = useQuery({
-    queryKey: ['faqs'],
-    queryFn: async () => {
-      const response = await api.get('/content/faqs');
-      return response.data;
-    },
-    initialData: [
-      { id: '1', question: 'When and where is the conference taking place?', answer: 'The Global Nursing Conference 2027 will take place on May 13-14, 2027 in Rome, Italy. The venue location details will be updated shortly.' },
-      { id: '2', question: 'What is the theme of the conference?', answer: 'The theme is "Nex-Gen Nursing – Trends, Techs, Triumphs in Global Health", focusing on digital health technology, nursing well-being, and global health security.' },
-      { id: '3', question: 'How do I download the brochure?', answer: 'Click the "Brochure Download" link in the navigation menu, fill in your details, and download the official PDF brochure immediately.' },
-      { id: '4', question: 'What are the document submission requirements?', answer: 'We accept PDF, DOC, and DOCX files under 10MB. Download our abstract sample template on the Abstract Submission modal for exact styling guidelines.' }
-    ]
-  });
-
-  const { data: gallery = [] } = useQuery({
-    queryKey: ['gallery'],
-    queryFn: async () => {
-      const response = await api.get('/content/gallery');
-      return response.data;
-    },
-    initialData: [
-      { id: '1', title: 'Colosseum, Rome', imagePath: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&q=80&w=600', category: 'ROME' },
-      { id: '2', title: 'Vatican City', imagePath: 'https://images.unsplash.com/photo-1542820229-081e0c12af0b?auto=format&fit=crop&q=80&w=600', category: 'ROME' },
-      { id: '3', title: 'Trevi Fountain', imagePath: 'https://images.unsplash.com/photo-1531572753322-ad063cecc140?auto=format&fit=crop&q=80&w=600', category: 'ROME' },
-      { id: '4', title: 'Previous Keynote Session', imagePath: 'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?auto=format&fit=crop&q=80&w=600', category: 'CONFERENCE' },
-      { id: '5', title: 'Interactive Panel', imagePath: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80&w=600', category: 'CONFERENCE' },
-      { id: '6', title: 'Networking break', imagePath: 'https://images.unsplash.com/photo-1515187029135-18ee286d815b?auto=format&fit=crop&q=80&w=600', category: 'CONFERENCE' }
-    ]
-  });
-
-  const { data: sponsors = [] } = useQuery({
-    queryKey: ['sponsors'],
-    queryFn: async () => {
-      const response = await api.get('/content/sponsors');
-      return response.data;
-    },
-    initialData: [
-      { id: '1', name: 'Syntrophy Conferences', logoPath: 'https://images.unsplash.com/photo-1599305445671-ac291c95aba9?auto=format&fit=crop&q=80&w=200', tier: 'PLATINUM' },
-      { id: '2', name: 'BioTech Health Solutions', logoPath: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80&w=200', tier: 'GOLD' },
-      { id: '3', name: 'Rome Medical Center', logoPath: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=200', tier: 'SILVER' }
-    ]
-  });
+  // Load data locally via Dexie Live Query hooks
+  const speakers = useLiveQuery(() => db.speakers.orderBy('order').toArray()) || [];
+  const agenda = useLiveQuery(() => db.agenda.orderBy('order').toArray()) || [];
+  const faqs = useLiveQuery(() => db.faqs.orderBy('order').toArray()) || [];
+  const gallery = useLiveQuery(() => db.gallery.toArray()) || [];
+  const sponsors = useLiveQuery(() => db.sponsors.orderBy('order').toArray()) || [];
 
   const contactMutation = useMutation({
     mutationFn: async (data: ContactFormData) => {
-      const response = await api.post('/contact', data);
-      return response.data;
+      const newMessage = {
+        id: crypto.randomUUID(),
+        ...data,
+        status: 'NEW' as const,
+        createdAt: new Date().toISOString()
+      };
+      await db.contactMessages.add(newMessage);
+      return newMessage;
     },
     onSuccess: () => {
       notifications.show({
@@ -166,11 +76,10 @@ export default function Home() {
       });
       reset();
     },
-    onError: (error: any) => {
-      const errorMsg = error.response?.data?.message || 'Failed to send message';
+    onError: () => {
       notifications.show({
         title: 'Error',
-        message: errorMsg,
+        message: 'Failed to record contact message.',
         color: 'red'
       });
     }
@@ -263,7 +172,15 @@ export default function Home() {
       </Box>
 
       {/* Conference Topics Section */}
-      <Box component="section" id="topics" style={{ padding: '80px 0', background: 'rgba(255,255,255,0.4)' }}>
+      <Box 
+        component="section" 
+        id="topics" 
+        style={{ 
+          padding: '80px 0', 
+          background: colorScheme === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.4)',
+          borderBottom: colorScheme === 'dark' ? '1px solid rgba(255,255,255,0.05)' : 'none'
+        }}
+      >
         <Container size="xl">
           <Stack align="center" gap="xs" style={{ textAlign: 'center', marginBottom: '50px' }}>
             <div style={{ background: 'rgba(16,185,129,0.1)', color: 'var(--color-emerald-green)', padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: 700, letterSpacing: '1px', display: 'inline-block', textTransform: 'uppercase' }}>
@@ -309,7 +226,7 @@ export default function Home() {
                         <Text fw={700} style={{ fontFamily: 'var(--font-title)', fontSize: '16px', lineHeight: 1.3 }}>
                           {topic.title}
                         </Text>
-                        <Text size="sm" c="dimmed" style={{ lineHeight: 1.5 }}>
+                        <Text size="sm" c={colorScheme === 'dark' ? 'rgba(255,255,255,0.7)' : 'dimmed'} style={{ lineHeight: 1.5 }}>
                           {topic.desc}
                         </Text>
                       </Stack>
@@ -346,7 +263,15 @@ export default function Home() {
       </Box>
 
       {/* Agenda Section */}
-      <Box component="section" id="agenda" style={{ padding: '80px 0', background: 'rgba(255,255,255,0.2)' }}>
+      <Box 
+        component="section" 
+        id="agenda" 
+        style={{ 
+          padding: '80px 0', 
+          background: colorScheme === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.2)',
+          borderBottom: colorScheme === 'dark' ? '1px solid rgba(255,255,255,0.05)' : 'none'
+        }}
+      >
         <Container size="xl">
           <Stack align="center" gap="xs" style={{ textAlign: 'center', marginBottom: '50px' }}>
             <div style={{ background: 'rgba(16,185,129,0.1)', color: 'var(--color-emerald-green)', padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: 700, letterSpacing: '1px', display: 'inline-block', textTransform: 'uppercase' }}>
@@ -384,7 +309,15 @@ export default function Home() {
       </Box>
 
       {/* About Rome & Travel Section */}
-      <Box component="section" id="rome" style={{ padding: '80px 0', background: 'rgba(255,255,255,0.3)' }}>
+      <Box 
+        component="section" 
+        id="rome" 
+        style={{ 
+          padding: '80px 0', 
+          background: colorScheme === 'dark' ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.3)',
+          borderBottom: colorScheme === 'dark' ? '1px solid rgba(255,255,255,0.05)' : 'none'
+        }}
+      >
         <Container size="xl">
           <SimpleGrid cols={{ base: 1, md: 2 }} spacing="xl">
             <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
@@ -398,7 +331,7 @@ export default function Home() {
                 Known as the <b>"Eternal City"</b>, Rome is a living museum where nearly 3,000 years of globally influential art, architecture, and culture are seamlessly woven into a bustling modern metropolis. It boasts iconic ruins like the Colosseum and the Roman Forum, alongside the majestic Vatican City.
               </Text>
               
-              <Text size="sm" fw={700} style={{ fontFamily: 'var(--font-title)', fontSize: '16px', color: 'var(--color-navy-blue)', marginBottom: '8px' }}>
+              <Text size="sm" fw={700} style={{ fontFamily: 'var(--font-title)', fontSize: '16px', color: colorScheme === 'dark' ? '#ffffff' : 'var(--color-navy-blue)', marginBottom: '8px' }}>
                 Why Visit in May?
               </Text>
               <Text size="sm" c="dimmed" style={{ lineHeight: 1.6, marginBottom: '10px' }}>
@@ -485,18 +418,64 @@ export default function Home() {
       </Box>
 
       {/* Sponsors Section */}
-      <Box component="section" id="sponsors" style={{ padding: '60px 0', background: 'rgba(255,255,255,0.4)' }}>
+      <Box 
+        component="section" 
+        id="sponsors" 
+        style={{ 
+          padding: '60px 0', 
+          background: colorScheme === 'dark' ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.4)',
+          borderTop: colorScheme === 'dark' ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.05)',
+          borderBottom: colorScheme === 'dark' ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.05)'
+        }}
+      >
         <Container size="xl">
-          <Text ta="center" fw={700} size="xs" c="dimmed" style={{ letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '30px' }}>
+          <Text 
+            ta="center" 
+            fw={700} 
+            size="xs" 
+            c={colorScheme === 'dark' ? 'rgba(255,255,255,0.5)' : 'dimmed'} 
+            style={{ letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '30px' }}
+          >
             Proudly Supported & Sponsored By
           </Text>
           <Group justify="center" gap="xl">
-            {sponsors.map((s: any) => (
-              <Group key={s.id} gap="xs" style={{ opacity: 0.7, '&:hover': { opacity: 1 }, transition: 'opacity 0.2s ease', cursor: 'pointer' }}>
-                <Image src={s.logoPath} width={120} height={50} style={{ objectFit: 'contain', filter: 'grayscale(100%) brightness(80%)' }} />
-                <Text size="sm" fw={700} c="dimmed">{s.name}</Text>
-              </Group>
-            ))}
+            {sponsors.map((s: any) => {
+              const logoUrl = s.name === 'Syntrophy Conferences' && s.logoPath.includes('unsplash.com')
+                ? '/logo_light.png'
+                : s.logoPath;
+
+              return (
+                <Group 
+                  key={s.id} 
+                  gap="xs" 
+                  style={{ 
+                    opacity: 0.85, 
+                    '&:hover': { opacity: 1 }, 
+                    transition: 'opacity 0.2s ease', 
+                    cursor: 'pointer' 
+                  }}
+                >
+                  <Image 
+                    src={logoUrl} 
+                    width={120} 
+                    height={50} 
+                    style={{ 
+                      objectFit: 'contain', 
+                      filter: colorScheme === 'dark' 
+                        ? 'brightness(1.2)' 
+                        : 'grayscale(100%) brightness(80%)' 
+                    }} 
+                  />
+                  <Text 
+                    size="sm" 
+                    fw={700} 
+                    c={colorScheme === 'dark' ? 'rgba(255,255,255,0.7)' : 'rgba(12,26,48,0.7)'}
+                  >
+                    {s.name}
+                  </Text>
+                </Group>
+              );
+            })}
           </Group>
         </Container>
       </Box>
@@ -556,7 +535,7 @@ export default function Home() {
                 {/* Embed a generic beautiful Google Maps view of Rome, Italy */}
                 <AspectRatio ratio={16 / 10}>
                   <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m12!1m3!1d190028.98064553313!2d12.371191599427218!3d41.90998595443217!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x132f6196f9d32313%3A0x82fd4d11d132d72a!2sRome%2C%20Metropolitan%20City%20of%20Rome%20Capital%2C%20Italy!5e0!3m2!1sen!2sus!4v1700000000000!5m2!1sen!2sus"
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d190028.98064553313!2d12.371191599427218!3d41.90998595443217!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x132f6196f9928ebb%3A0xb90f770693656e38!2sRome%2C%20Metropolitan%20City%20of%20Rome%20Capital%2C%20Italy!5e0!3m2!1sen!2sus!4v1700000000000!5m2!1sen!2sus"
                     title="Rome, Italy Venue Map"
                     style={{ border: 0 }}
                     allowFullScreen

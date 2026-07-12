@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
 import { notifications } from '@mantine/notifications';
-import { IconLock, IconStethoscope } from '@tabler/icons-react';
+import { IconLock } from '@tabler/icons-react';
 import api from '../services/api';
 
 const loginSchema = z.object({
@@ -80,21 +80,11 @@ export default function AdminLogin() {
           }}
         >
           <Center style={{ flexDirection: 'column', marginBottom: '20px' }}>
-            <div
-              style={{
-                width: '50px',
-                height: '50px',
-                borderRadius: '50%',
-                background: 'rgba(0,119,255,0.1)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#0077ff',
-                marginBottom: '10px'
-              }}
-            >
-              <IconStethoscope size={28} />
-            </div>
+            <img 
+              src={colorScheme === 'dark' ? '/logo_dark.png' : '/logo_light.png'} 
+              alt="Syntrophy Global Health Logo" 
+              style={{ height: '50px', objectFit: 'contain', marginBottom: '15px' }} 
+            />
             <Title order={2} style={{ fontFamily: 'var(--font-title)', fontSize: '22px' }}>
               Conference Administrator
             </Title>

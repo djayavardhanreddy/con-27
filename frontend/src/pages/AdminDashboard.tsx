@@ -5,17 +5,18 @@ import {
   ActionIcon, SimpleGrid, Stack, Box, Space, Menu
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { notifications } from '@mantine/notifications';
 import {
   IconUsers, IconFileText, IconDownload, IconMessage, IconBuildingBank, IconTrash, IconEdit, IconPlus,
   IconSearch, IconCheck, IconX, IconLogout, IconStethoscope, IconFileExcel, IconRefresh
 } from '@tabler/icons-react';
 import api from '../services/api';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db } from '../services/db';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<string>('analytics');
 
   // Search & Filter States
@@ -57,226 +58,280 @@ export default function AdminDashboard() {
     navigate('/admin/login');
   };
 
-  // --- QUERY FETCHERS ---
-  const { data: analytics, refetch: refetchAnalytics } = useQuery({
-    queryKey: ['admin-analytics'],
-    queryFn: async () => {
-      const response = await api.get('/admin/analytics');
-      return response.data;
-    }
-  });
+  // --- LOCAL DEXIE DATABASE QUERIES & ANALYTICS ---
+  const allRegistrations = useLiveQuery(() => db.registrations.toArray()) || [];
+  const allAbstracts = useLiveQuery(() => db.abstracts.toArray()) || [];
+  const allBrochures = useLiveQuery(() => db.brochureDownloads.toArray()) || [];
+  const allMessages = useLiveQuery(() => db.contactMessages.toArray()) || [];
 
-  const { data: registrationsData, refetch: refetchRegistrations } = useQuery({
-    queryKey: ['admin-registrations', regSearch, regStatus, regPackage],
-    queryFn: async () => {
-      const response = await api.get('/registrations', {
-        params: { search: regSearch, status: regStatus, package: regPackage, limit: 100 }
-      });
-      return response.data;
-    }
-  });
+  const analytics = {
+    totals: {
+      registrations: allRegistrations.length,
+      pendingRegistrationsCount: allRegistrations.filter(r => r.status === 'PENDING').length,
+      revenue: allRegistrations.filter(r => r.status === 'PAID').reduce((sum, r) => sum + r.amount, 0),
+      abstracts: allAbstracts.length,
+      brochureDownloads: allBrochures.length,
+      contactMessages: allMessages.length,
+      pendingAbstracts: allAbstracts.filter(a => a.status === 'PENDING').length
+    },
+    packages: ['STUDENT', 'ONE_DAY', 'PLAN_A', 'PLAN_B'].map(pkg => {
+      const pkgRegs = allRegistrations.filter(r => r.package === pkg);
+      return {
+        package: pkg,
+        count: pkgRegs.length,
+        revenue: pkgRegs.filter(r => r.status === 'PAID').reduce((sum, r) => sum + r.amount, 0)
+      };
+    }),
+    abstracts: ['PENDING', 'UNDER_REVIEW', 'ACCEPTED', 'REJECTED'].map(status => {
+      const statusAbstracts = allAbstracts.filter(a => a.status === status);
+      return {
+        status: status,
+        count: statusAbstracts.length
+      };
+    })
+  };
 
-  const { data: abstractsData, refetch: refetchAbstracts } = useQuery({
-    queryKey: ['admin-abstracts', abstractSearch, abstractStatus],
-    queryFn: async () => {
-      const response = await api.get('/abstracts', {
-        params: { search: abstractSearch, status: abstractStatus, limit: 100 }
-      });
-      return response.data;
+  const registrationsList = useLiveQuery(async () => {
+    let items = await db.registrations.toArray();
+    if (regSearch) {
+      const searchLower = regSearch.toLowerCase();
+      items = items.filter(r => 
+        r.name.toLowerCase().includes(searchLower) ||
+        r.email.toLowerCase().includes(searchLower) ||
+        r.phone.includes(searchLower) ||
+        r.country.toLowerCase().includes(searchLower)
+      );
     }
-  });
-
-  const { data: brochureDownloads, refetch: refetchBrochures } = useQuery({
-    queryKey: ['admin-brochures'],
-    queryFn: async () => {
-      const response = await api.get('/brochure', { params: { limit: 100 } });
-      return response.data;
+    if (regStatus) {
+      items = items.filter(r => r.status === regStatus);
     }
-  });
-
-  const { data: contactMessages, refetch: refetchMessages } = useQuery({
-    queryKey: ['admin-messages'],
-    queryFn: async () => {
-      const response = await api.get('/contact', { params: { limit: 100 } });
-      return response.data;
+    if (regPackage) {
+      items = items.filter(r => r.package === regPackage);
     }
-  });
+    return items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [regSearch, regStatus, regPackage]) || [];
 
-  const { data: speakers = [], refetch: refetchSpeakers } = useQuery({
-    queryKey: ['admin-speakers'],
-    queryFn: async () => {
-      const response = await api.get('/content/speakers');
-      return response.data;
+  const registrationsData = { items: registrationsList };
+
+  const abstractsList = useLiveQuery(async () => {
+    let items = await db.abstracts.toArray();
+    if (abstractSearch) {
+      const searchLower = abstractSearch.toLowerCase();
+      items = items.filter(a => 
+        a.name.toLowerCase().includes(searchLower) ||
+        a.email.toLowerCase().includes(searchLower) ||
+        a.title.toLowerCase().includes(searchLower) ||
+        a.country.toLowerCase().includes(searchLower)
+      );
     }
-  });
-
-  const { data: agenda = [], refetch: refetchAgenda } = useQuery({
-    queryKey: ['admin-agenda'],
-    queryFn: async () => {
-      const response = await api.get('/content/agenda');
-      return response.data;
+    if (abstractStatus) {
+      items = items.filter(a => a.status === abstractStatus);
     }
-  });
+    return items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [abstractSearch, abstractStatus]) || [];
 
-  const { data: faqs = [], refetch: refetchFAQs } = useQuery({
-    queryKey: ['admin-faqs'],
-    queryFn: async () => {
-      const response = await api.get('/content/faqs');
-      return response.data;
-    }
-  });
+  const abstractsData = { items: abstractsList };
 
-  // --- MUTATIONS ---
-  // Registration Status Modifier
+  const brochureDownloadsList = useLiveQuery(async () => {
+    const items = await db.brochureDownloads.toArray();
+    return items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }) || [];
+
+  const brochureDownloads = { items: brochureDownloadsList };
+
+  const contactMessagesList = useLiveQuery(async () => {
+    const items = await db.contactMessages.toArray();
+    return items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }) || [];
+
+  const contactMessages = { items: contactMessagesList };
+
+  const speakers = useLiveQuery(() => db.speakers.orderBy('order').toArray()) || [];
+  const agenda = useLiveQuery(() => db.agenda.orderBy('order').toArray()) || [];
+  const faqs = useLiveQuery(() => db.faqs.orderBy('order').toArray()) || [];
+
+  // --- LOCAL MUTATIONS ---
   const updateRegStatusMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const response = await api.patch(`/registrations/${id}/status`, { status });
-      return response.data;
+    mutationFn: async ({ id, status }: { id: string; status: any }) => {
+      await db.registrations.update(id, { status });
+      return { id, status };
     },
     onSuccess: () => {
       notifications.show({ title: 'Success', message: 'Registration status updated', color: 'teal' });
-      queryClient.invalidateQueries({ queryKey: ['admin-registrations'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-analytics'] });
     }
   });
 
-  // Abstract Status Modifier
   const updateAbstractStatusMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const response = await api.patch(`/abstracts/${id}/status`, { status });
-      return response.data;
+    mutationFn: async ({ id, status }: { id: string; status: any }) => {
+      await db.abstracts.update(id, { status });
+      return { id, status };
     },
     onSuccess: () => {
       notifications.show({ title: 'Success', message: 'Abstract status updated', color: 'teal' });
-      queryClient.invalidateQueries({ queryKey: ['admin-abstracts'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-analytics'] });
     }
   });
 
-  // Contact Status Modifier
   const updateMessageStatusMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const response = await api.patch(`/contact/${id}/status`, { status });
-      return response.data;
+    mutationFn: async ({ id, status }: { id: string; status: any }) => {
+      await db.contactMessages.update(id, { status });
+      return { id, status };
     },
     onSuccess: () => {
       notifications.show({ title: 'Success', message: 'Message status updated', color: 'teal' });
-      queryClient.invalidateQueries({ queryKey: ['admin-messages'] });
     }
   });
 
-  // Speaker CRUD Mutations
   const saveSpeakerMutation = useMutation({
     mutationFn: async (speakerData: any) => {
+      const formattedData = {
+        name: speakerData.name,
+        designation: speakerData.designation,
+        organization: speakerData.organization,
+        country: speakerData.country,
+        imagePath: speakerData.imagePath || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=400',
+        bio: speakerData.bio || '',
+        twitter: speakerData.twitter || '',
+        linkedin: speakerData.linkedin || '',
+        order: Number(speakerData.order) || 0
+      };
+
       if (editingSpeaker?.id) {
-        return api.put(`/content/speakers/${editingSpeaker.id}`, speakerData);
+        await db.speakers.update(editingSpeaker.id, formattedData);
       } else {
-        return api.post('/content/speakers', speakerData);
+        await db.speakers.add({
+          id: crypto.randomUUID(),
+          ...formattedData,
+          createdAt: new Date().toISOString()
+        });
       }
     },
     onSuccess: () => {
       notifications.show({ title: 'Success', message: 'Speaker saved successfully', color: 'teal' });
       closeSpeakerModal();
       setEditingSpeaker(null);
-      queryClient.invalidateQueries({ queryKey: ['admin-speakers'] });
     }
   });
 
   const deleteSpeakerMutation = useMutation({
     mutationFn: async (id: string) => {
-      return api.delete(`/content/speakers/${id}`);
+      await db.speakers.delete(id);
     },
     onSuccess: () => {
       notifications.show({ title: 'Deleted', message: 'Speaker removed', color: 'blue' });
-      queryClient.invalidateQueries({ queryKey: ['admin-speakers'] });
     }
   });
 
-  // Agenda CRUD Mutations
   const saveAgendaMutation = useMutation({
     mutationFn: async (agendaData: any) => {
+      const formattedData = {
+        day: Number(agendaData.day) || 1,
+        timeSlot: agendaData.timeSlot,
+        title: agendaData.title,
+        description: agendaData.description || '',
+        speakerName: agendaData.speakerName || '',
+        location: agendaData.location || '',
+        type: agendaData.type as any,
+        order: Number(agendaData.order) || 0
+      };
+
       if (editingAgenda?.id) {
-        return api.put(`/content/agenda/${editingAgenda.id}`, agendaData);
+        await db.agenda.update(editingAgenda.id, formattedData);
       } else {
-        return api.post('/content/agenda', agendaData);
+        await db.agenda.add({
+          id: crypto.randomUUID(),
+          ...formattedData,
+          createdAt: new Date().toISOString()
+        });
       }
     },
     onSuccess: () => {
       notifications.show({ title: 'Success', message: 'Agenda saved successfully', color: 'teal' });
       closeAgendaModal();
       setEditingAgenda(null);
-      queryClient.invalidateQueries({ queryKey: ['admin-agenda'] });
     }
   });
 
   const deleteAgendaMutation = useMutation({
     mutationFn: async (id: string) => {
-      return api.delete(`/content/agenda/${id}`);
+      await db.agenda.delete(id);
     },
     onSuccess: () => {
       notifications.show({ title: 'Deleted', message: 'Agenda item removed', color: 'blue' });
-      queryClient.invalidateQueries({ queryKey: ['admin-agenda'] });
     }
   });
 
-  // FAQ CRUD Mutations
   const saveFAQMutation = useMutation({
     mutationFn: async (faqData: any) => {
+      const formattedData = {
+        question: faqData.question,
+        answer: faqData.answer,
+        order: Number(faqData.order) || 0
+      };
+
       if (editingFAQ?.id) {
-        return api.put(`/content/faqs/${editingFAQ.id}`, faqData);
+        await db.faqs.update(editingFAQ.id, formattedData);
       } else {
-        return api.post('/content/faqs', faqData);
+        await db.faqs.add({
+          id: crypto.randomUUID(),
+          ...formattedData,
+          createdAt: new Date().toISOString()
+        });
       }
     },
     onSuccess: () => {
       notifications.show({ title: 'Success', message: 'FAQ saved successfully', color: 'teal' });
       closeFAQModal();
       setEditingFAQ(null);
-      queryClient.invalidateQueries({ queryKey: ['admin-faqs'] });
     }
   });
 
   const deleteFAQMutation = useMutation({
     mutationFn: async (id: string) => {
-      return api.delete(`/content/faqs/${id}`);
+      await db.faqs.delete(id);
     },
     onSuccess: () => {
       notifications.show({ title: 'Deleted', message: 'FAQ removed', color: 'blue' });
-      queryClient.invalidateQueries({ queryKey: ['admin-faqs'] });
     }
   });
 
-  // --- REPORT DOWNLOAD TRIGGERS ---
+  // --- REPORT DOWNLOAD TRIGGERS (FASTAPI INTERFACE) ---
   const triggerExport = (endpoint: string, filename: string) => {
     const token = localStorage.getItem('token');
-    const url = `/api/admin/export/${endpoint}`;
     
-    // Download using standard fetch with auth headers
-    fetch(url, {
+    // Extract the matching filtered dataset to send to Python API
+    const dataset = endpoint.startsWith('registrations') ? registrationsList : abstractsList;
+
+    api.post(`/reports/${endpoint}`, { data: dataset }, {
+      responseType: 'blob',
       headers: {
         Authorization: `Bearer ${token}`
       }
     })
       .then((res) => {
-        if (!res.ok) throw new Error('Download failed');
-        return res.blob();
-      })
-      .then((blob) => {
+        const blob = new Blob([res.data]);
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
         link.download = filename;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        notifications.show({ title: 'Export Complete', message: 'Report downloaded successfully', color: 'teal' });
       })
       .catch(() => {
-        notifications.show({ title: 'Export Error', message: 'Failed to compile report exports', color: 'red' });
+        notifications.show({ title: 'Export Error', message: 'Failed to compile report exports from Python backend', color: 'red' });
       });
   };
 
   const triggerAbstractFileDownload = (id: string, originalName: string) => {
+    const item = abstractsList.find(a => a.id === id);
+    if (!item || !item.filePath) {
+      notifications.show({ title: 'File Error', message: 'Abstract file path not found', color: 'red' });
+      return;
+    }
+
     const token = localStorage.getItem('token');
-    const url = `/api/abstracts/download/${id}`;
+    // Fetch file from Python static upload mount
+    const url = `${api.defaults.baseURL}/../${item.filePath}`.replace('/api/../', '/');
     
     fetch(url, {
       headers: {
@@ -296,20 +351,12 @@ export default function AdminDashboard() {
         document.body.removeChild(link);
       })
       .catch(() => {
-        notifications.show({ title: 'File Error', message: 'Abstract file could not be fetched from storage', color: 'red' });
+        notifications.show({ title: 'File Error', message: 'Abstract file could not be fetched from server', color: 'red' });
       });
   };
 
   const triggerRefresh = () => {
-    refetchAnalytics();
-    refetchRegistrations();
-    refetchAbstracts();
-    refetchBrochures();
-    refetchMessages();
-    refetchSpeakers();
-    refetchAgenda();
-    refetchFAQs();
-    notifications.show({ title: 'Refreshed', message: 'Dashboard state synchronized with DB.', color: 'blue' });
+    notifications.show({ title: 'Dashboard Synced', message: 'State successfully matched with IndexedDB.', color: 'teal' });
   };
 
   // --- MODAL HANDLERS ---
@@ -359,11 +406,13 @@ export default function AdminDashboard() {
       <Box style={{ background: '#0c1a30', color: '#fff', padding: '15px 0', borderBottom: '3px solid #0077ff' }}>
         <Container size="xl">
           <Group justify="space-between">
-            <Group gap="xs">
-              <IconStethoscope size={28} color="#0077ff" />
-              <Title order={3} style={{ fontFamily: 'var(--font-title)', fontSize: '20px' }}>
-                GNC 2027 Admin Console
-              </Title>
+            <Group gap="md">
+              <img src="/logo_dark.png" alt="Syntrophy Global Health Logo" style={{ height: '46px', objectFit: 'contain' }} />
+              <div style={{ borderLeft: '1px solid rgba(255,255,255,0.2)', paddingLeft: '12px', height: '32px', display: 'flex', alignItems: 'center' }}>
+                <Text fw={700} style={{ fontFamily: 'var(--font-title)', fontSize: '18px', letterSpacing: '0.5px' }}>
+                  Admin Console
+                </Text>
+              </div>
             </Group>
             
             <Group gap="md">

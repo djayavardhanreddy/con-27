@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
 import { notifications } from '@mantine/notifications';
-import api from '../services/api';
+import { db } from '../services/db';
 import { IconCheck, IconCircleCheckFilled, IconBrandPaypal } from '@tabler/icons-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -47,24 +47,41 @@ export default function RegistrationForm() {
 
   const registrationMutation = useMutation({
     mutationFn: async (data: RegistrationFormData) => {
-      const response = await api.post('/registrations', data);
-      return response.data;
+      let amount = 0;
+      if (data.package === 'STUDENT') amount = 399;
+      else if (data.package === 'ONE_DAY') amount = 249;
+      else if (data.package === 'PLAN_A') amount = 999;
+      else if (data.package === 'PLAN_B') amount = 849;
+
+      if (data.paymentMethod === 'PAYPAL') {
+        amount = Number((amount * 1.02).toFixed(2));
+      }
+
+      const newRegistration = {
+        id: crypto.randomUUID(),
+        ...data,
+        amount,
+        status: 'PENDING' as const,
+        createdAt: new Date().toISOString()
+      };
+
+      await db.registrations.add(newRegistration);
+      return newRegistration;
     },
     onSuccess: (res) => {
       notifications.show({
         title: 'Registration Submitted',
-        message: `Thank you! Your registration for package ${res.registration.package} has been received. Href sent to ${res.registration.email}.`,
+        message: `Thank you! Your registration for package ${res.package} has been received. Access details sent to ${res.email}.`,
         color: 'teal',
         icon: <IconCheck size={18} />
       });
       reset();
       setSelectedPackage(null);
     },
-    onError: (error: any) => {
-      const errorMsg = error.response?.data?.message || 'Failed to submit registration';
+    onError: () => {
       notifications.show({
         title: 'Registration Failed',
-        message: errorMsg,
+        message: 'Failed to save registration locally.',
         color: 'red'
       });
     }

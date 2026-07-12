@@ -1,5 +1,5 @@
 import { Container, SimpleGrid, Group, Text, TextInput, ActionIcon, Stack, useMantineColorScheme } from '@mantine/core';
-import { IconBrandTwitter, IconBrandLinkedin, IconBrandFacebook, IconBrandInstagram, IconStethoscope, IconSend, IconCheck } from '@tabler/icons-react';
+import { IconBrandTwitter, IconBrandLinkedin, IconBrandFacebook, IconBrandInstagram, IconSend, IconCheck } from '@tabler/icons-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -85,10 +85,11 @@ export default function Footer() {
           {/* Col 1: Brand & Bio */}
           <Stack gap="md">
             <Group gap="xs">
-              <IconStethoscope size={28} color="#0077ff" />
-              <Text style={{ fontFamily: 'var(--font-title)', fontWeight: 800, fontSize: '20px', color: '#fff' }}>
-                GNC<span style={{ color: '#0077ff' }}>2027</span>
-              </Text>
+              <img 
+                src="/logo_dark.png" 
+                alt="Syntrophy Global Health Logo" 
+                style={{ height: '54px', objectFit: 'contain' }} 
+              />
             </Group>
             
             <Text size="sm" c="rgba(255,255,255,0.6)" style={{ lineHeight: 1.6 }}>

@@ -1,4 +1,4 @@
-import { Container, Title, Text, Group, Button, SimpleGrid, Stack } from '@mantine/core';
+import { Container, Title, Text, Group, Button, SimpleGrid, Stack, useMantineColorScheme } from '@mantine/core';
 import { motion } from 'framer-motion';
 import { IconArrowRight, IconDownload, IconFileText, IconUsers, IconMicrophone, IconGlobe } from '@tabler/icons-react';
 import CountdownTimer from './CountdownTimer';
@@ -9,6 +9,7 @@ interface HeroProps {
 }
 
 export default function Hero({ onOpenBrochure, onOpenAbstract }: HeroProps) {
+  const { colorScheme } = useMantineColorScheme();
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -54,14 +55,16 @@ export default function Hero({ onOpenBrochure, onOpenAbstract }: HeroProps) {
       style={{
         position: 'relative',
         minHeight: '100vh',
-        backgroundImage: 'linear-gradient(to bottom, rgba(12, 26, 48, 0.85), rgba(12, 26, 48, 0.9)), url("https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80&w=1920")',
+        backgroundImage: colorScheme === 'dark'
+          ? 'linear-gradient(to bottom, rgba(12, 26, 48, 0.85), rgba(12, 26, 48, 0.9)), url("https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80&w=1920")'
+          : 'linear-gradient(to bottom, rgba(255, 255, 255, 0.75), rgba(240, 244, 248, 0.85)), url("https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&q=80&w=1920")',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         paddingTop: '120px',
         paddingBottom: '80px',
         display: 'flex',
         alignItems: 'center',
-        color: '#ffffff',
+        color: colorScheme === 'dark' ? '#ffffff' : '#0c1a30',
         overflow: 'hidden'
       }}
     >
@@ -146,7 +149,7 @@ export default function Hero({ onOpenBrochure, onOpenAbstract }: HeroProps) {
                   fontFamily: 'var(--font-sans)',
                   fontSize: 'clamp(1rem, 2.5vw, 1.3rem)',
                   fontWeight: 500,
-                  color: 'rgba(255, 255, 255, 0.85)'
+                  color: colorScheme === 'dark' ? 'rgba(255, 255, 255, 0.85)' : 'rgba(12, 26, 48, 0.85)'
                 }}
               >
                 📍 Rome, Italy &nbsp; | &nbsp; 📅 May 13–14, 2027
@@ -187,14 +190,14 @@ export default function Hero({ onOpenBrochure, onOpenAbstract }: HeroProps) {
                   style={{
                     height: '54px',
                     fontWeight: 700,
-                    borderColor: 'rgba(255, 255, 255, 0.4)',
-                    color: '#ffffff',
+                    borderColor: colorScheme === 'dark' ? 'rgba(255, 255, 255, 0.4)' : 'rgba(12, 26, 48, 0.25)',
+                    color: colorScheme === 'dark' ? '#ffffff' : '#0c1a30',
                     borderRadius: '30px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    backgroundColor: colorScheme === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
                     padding: '0 30px',
                     '&:hover': {
-                      backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                      borderColor: '#ffffff'
+                      backgroundColor: colorScheme === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)',
+                      borderColor: colorScheme === 'dark' ? '#ffffff' : '#0c1a30'
                     }
                   }}
                 >
@@ -225,8 +228,8 @@ export default function Hero({ onOpenBrochure, onOpenAbstract }: HeroProps) {
                 cols={{ base: 2, md: 4 }}
                 spacing="xl"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  border: '1px solid rgba(255, 255, 255, 0.05)',
+                  background: colorScheme === 'dark' ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
+                  border: colorScheme === 'dark' ? '1px solid rgba(255, 255, 255, 0.05)' : '1px solid rgba(12, 26, 48, 0.08)',
                   borderRadius: '16px',
                   padding: '24px',
                   backdropFilter: 'blur(10px)'
@@ -251,10 +254,10 @@ export default function Hero({ onOpenBrochure, onOpenAbstract }: HeroProps) {
                         <Icon size={22} />
                       </div>
                       <div>
-                        <Text style={{ fontFamily: 'var(--font-title)', fontSize: '1.75rem', fontWeight: 800, color: '#ffffff', lineHeight: 1.1 }}>
+                        <Text style={{ fontFamily: 'var(--font-title)', fontSize: '1.75rem', fontWeight: 800, color: colorScheme === 'dark' ? '#ffffff' : '#0c1a30', lineHeight: 1.1 }}>
                           {stat.value}
                         </Text>
-                        <Text size="xs" fw={600} c="rgba(255, 255, 255, 0.6)" style={{ textTransform: 'uppercase', letterSpacing: '1px' }}>
+                        <Text size="xs" fw={600} c={colorScheme === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(12, 26, 48, 0.6)'} style={{ textTransform: 'uppercase', letterSpacing: '1px' }}>
                           {stat.label}
                         </Text>
                       </div>

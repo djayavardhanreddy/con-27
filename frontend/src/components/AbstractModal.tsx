@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
 import { notifications } from '@mantine/notifications';
 import api from '../services/api';
+import { db } from '../services/db';
 import { IconCheck, IconFileFilled, IconUpload, IconX, IconInfoCircle } from '@tabler/icons-react';
 
 const abstractSchema = z.object({
@@ -50,13 +51,31 @@ export default function AbstractModal({ opened, onClose }: AbstractModalProps) {
   });
 
   const abstractMutation = useMutation({
-    mutationFn: async (formData: FormData) => {
-      const response = await api.post('/abstracts', formData, {
+    mutationFn: async (data: AbstractFormData) => {
+      if (!file) throw new Error('No file selected');
+
+      const uploadData = new FormData();
+      uploadData.append('file', file);
+      
+      const uploadResponse = await api.post('/abstracts/upload', uploadData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
-      return response.data;
+
+      const { filePath, fileName } = uploadResponse.data;
+
+      const newAbstract = {
+        id: crypto.randomUUID(),
+        ...data,
+        fileName,
+        filePath,
+        status: 'PENDING' as const,
+        createdAt: new Date().toISOString()
+      };
+
+      await db.abstracts.add(newAbstract);
+      return newAbstract;
     },
     onSuccess: () => {
       notifications.show({
@@ -131,18 +150,7 @@ export default function AbstractModal({ opened, onClose }: AbstractModalProps) {
       setFileError('Please upload an abstract document.');
       return;
     }
-
-    const formData = new FormData();
-    formData.append('prefix', data.prefix);
-    formData.append('name', data.name);
-    formData.append('email', data.email);
-    formData.append('phone', data.phone);
-    formData.append('profession', data.profession);
-    formData.append('country', data.country);
-    formData.append('title', data.title);
-    formData.append('file', file);
-
-    abstractMutation.mutate(formData);
+    abstractMutation.mutate(data);
   };
 
   const triggerSampleDownload = () => {
