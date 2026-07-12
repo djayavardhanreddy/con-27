@@ -1,0 +1,18 @@
+{
+  "name": "con-27-root",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Root workspace of con-27 Global Nursing Conference 2027",
+  "scripts": {
+    "dev:backend": "pnpm --filter con-27-backend dev",
+    "dev:frontend": "pnpm --filter con-27-frontend dev",
+    "dev": "pnpm run --parallel dev:backend dev:frontend",
+    "build:backend": "pnpm --filter con-27-backend build",
+    "build:frontend": "pnpm --filter con-27-frontend build",
+    "build": "pnpm run build:backend && pnpm run build:frontend",
+    "db:migrate": "pnpm --filter con-27-backend db:migrate",
+    "db:seed": "pnpm --filter con-27-backend db:seed",
+    "db:studio": "pnpm --filter con-27-backend db:studio"
+  },
+  "devDependencies": {}
+}

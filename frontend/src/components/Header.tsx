@@ -1,0 +1,201 @@
+import { useState, useEffect } from 'react';
+import { Container, Group, Button, Drawer, Burger, ActionIcon, useMantineColorScheme } from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
+import { IconSun, IconMoon, IconStethoscope } from '@tabler/icons-react';
+
+interface HeaderProps {
+  onOpenBrochure: () => void;
+  onOpenAbstract: () => void;
+}
+
+export default function Header({ onOpenBrochure, onOpenAbstract }: HeaderProps) {
+  const [opened, { toggle, close }] = useDisclosure(false);
+  const [scrolled, setScrolled] = useState(false);
+  const { colorScheme, toggleColorScheme } = useMantineColorScheme();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 50) {
+        setScrolled(true);
+      } else {
+        setScrolled(false);
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const handleNavClick = (selector: string) => {
+    close();
+    const element = document.querySelector(selector);
+    if (element) {
+      const offset = 60;
+      const bodyRect = document.body.getBoundingClientRect().top;
+      const elementRect = element.getBoundingClientRect().top;
+      const elementPosition = elementRect - bodyRect;
+      const offsetPosition = elementPosition - offset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const navItems = [
+    { label: 'Home', action: () => window.scrollTo({ top: 0, behavior: 'smooth' }) },
+    { label: 'Brochure Download', action: onOpenBrochure },
+    { label: 'Abstract Submission', action: onOpenAbstract },
+    { label: 'Agenda', action: () => handleNavClick('#agenda') },
+    { label: 'Registration', action: () => handleNavClick('#registration') },
+    { label: 'Contact Us', action: () => handleNavClick('#contact') },
+    { label: 'FAQs', action: () => handleNavClick('#faqs') },
+  ];
+
+  return (
+    <header
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 100,
+        height: '60px',
+        display: 'flex',
+        alignItems: 'center',
+        transition: 'all 0.3s ease',
+        background: scrolled 
+          ? (colorScheme === 'dark' ? 'rgba(12, 26, 48, 0.85)' : 'rgba(255, 255, 255, 0.85)') 
+          : 'transparent',
+        backdropFilter: scrolled ? 'blur(12px)' : 'none',
+        WebkitBackdropFilter: scrolled ? 'blur(12px)' : 'none',
+        borderBottom: scrolled 
+          ? (colorScheme === 'dark' ? '1px solid rgba(255, 255, 255, 0.05)' : '1px solid rgba(0, 0, 0, 0.05)') 
+          : 'none',
+        boxShadow: scrolled 
+          ? '0 8px 32px 0 rgba(31, 38, 135, 0.08)' 
+          : 'none'
+      }}
+    >
+      <Container size="xl" style={{ width: '100%' }}>
+        <Group justify="space-between" align="center">
+          {/* Logo */}
+          <Group gap="xs" style={{ cursor: 'pointer' }} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+            <IconStethoscope size={30} color="#0077ff" />
+            <div style={{ fontFamily: 'var(--font-title)', fontWeight: 800, fontSize: '20px', letterSpacing: '-0.5px' }}>
+              <span style={{ color: '#0077ff' }}>GNC</span>
+              <span style={{ color: scrolled ? (colorScheme === 'dark' ? '#fff' : '#0c1a30') : '#fff' }}>2027</span>
+            </div>
+          </Group>
+
+          {/* Desktop Navigation Links */}
+          <Group gap="xl" visibleFrom="lg">
+            {navItems.map((item) => (
+              <Button
+                key={item.label}
+                variant="transparent"
+                onClick={item.action}
+                styles={{
+                  root: {
+                    color: scrolled
+                      ? 'var(--color-text-dark)'
+                      : (colorScheme === 'dark' ? '#fff' : '#fff'),
+                    fontWeight: 500,
+                    fontSize: '14px',
+                    fontFamily: 'var(--font-sans)',
+                    padding: '0 8px',
+                    '&:hover': {
+                      color: 'var(--color-medical-blue)',
+                      backgroundColor: 'transparent'
+                    }
+                  }
+                }}
+              >
+                {item.label}
+              </Button>
+            ))}
+          </Group>
+
+          {/* Action buttons (Theme and Register) */}
+          <Group gap="md">
+            <ActionIcon
+              variant="subtle"
+              onClick={() => toggleColorScheme()}
+              size="lg"
+              radius="md"
+              color={scrolled ? 'blue' : 'gray'}
+            >
+              {colorScheme === 'dark' ? <IconSun size={20} color={scrolled ? undefined : '#fff'} /> : <IconMoon size={20} color={scrolled ? undefined : '#fff'} />}
+            </ActionIcon>
+
+            <Button
+              visibleFrom="sm"
+              variant="gradient"
+              gradient={{ from: 'medical.5', to: 'emerald.5' }}
+              onClick={() => handleNavClick('#registration')}
+              style={{
+                boxShadow: '0 4px 14px rgba(0, 119, 255, 0.3)',
+                fontWeight: 600
+              }}
+            >
+              Register Now
+            </Button>
+
+            <Burger opened={opened} onClick={toggle} hiddenFrom="lg" size="sm" color={scrolled ? undefined : '#fff'} />
+          </Group>
+        </Group>
+      </Container>
+
+      {/* Mobile Navigation Drawer */}
+      <Drawer
+        opened={opened}
+        onClose={close}
+        size="md"
+        padding="xl"
+        title="Navigation Menu"
+        hiddenFrom="lg"
+        styles={{
+          header: { fontFamily: 'var(--font-title)', fontWeight: 700 },
+          body: { paddingTop: '20px' }
+        }}
+      >
+        <Group gap="md" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+          {navItems.map((item) => (
+            <Button
+              key={item.label}
+              variant="light"
+              color="gray"
+              fullWidth
+              onClick={() => {
+                close();
+                item.action();
+              }}
+              styles={{
+                root: {
+                  justifyContent: 'flex-start',
+                  height: '45px',
+                  fontFamily: 'var(--font-sans)',
+                  fontWeight: 500
+                }
+              }}
+            >
+              {item.label}
+            </Button>
+          ))}
+          <Button
+            variant="gradient"
+            gradient={{ from: 'medical.5', to: 'emerald.5' }}
+            fullWidth
+            onClick={() => {
+              close();
+              handleNavClick('#registration');
+            }}
+            style={{ height: '45px', marginTop: '10px' }}
+          >
+            Register Now
+          </Button>
+        </Group>
+      </Drawer>
+    </header>
+  );
+}

@@ -1,0 +1,138 @@
+/* CSS Reset and Styling Foundations */
+
+:root {
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-title: 'Poppins', sans-serif;
+
+  /* Color Palette */
+  --color-medical-blue: #0077ff;
+  --color-medical-blue-hover: #005ecf;
+  --color-navy-blue: #0c1a30;
+  --color-navy-light: #172a45;
+  --color-emerald-green: #10b981;
+  --color-light-gray: #f8fafc;
+  --color-text-dark: #1e293b;
+  --color-text-light: #f8fafc;
+  
+  /* Additional variables */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.08);
+}
+
+html[data-mantine-color-scheme="dark"] {
+  --glass-bg: rgba(12, 26, 48, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.05);
+  --color-light-gray: #0b1528;
+  --color-text-dark: #f8fafc;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-family: var(--font-sans);
+  background-color: var(--color-light-gray);
+  color: var(--color-text-dark);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-title);
+  font-weight: 600;
+}
+
+/* Glassmorphism Styles */
+.glass-header {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  transition: all 0.3s ease;
+}
+
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: var(--glass-shadow);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.glass-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.15);
+}
+
+/* Gradient text utility */
+.gradient-text {
+  background: linear-gradient(135deg, var(--color-medical-blue), var(--color-emerald-green));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gradient-text-navy {
+  background: linear-gradient(135deg, var(--color-navy-blue), var(--color-medical-blue));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Smooth transition for theme toggles */
+* {
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Timeline Custom Styles */
+.timeline-item {
+  position: relative;
+  padding-left: 30px;
+  border-left: 2px solid var(--color-medical-blue);
+  margin-bottom: 30px;
+}
+
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -7px;
+  top: 5px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--color-emerald-green);
+  border: 2px solid #fff;
+}
+
+/* Parallax backgrounds */
+.hero-parallax {
+  background-attachment: fixed;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.5);
+}
