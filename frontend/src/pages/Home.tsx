@@ -24,7 +24,7 @@ import Footer from '../components/Footer';
 
 import {
   IconShieldLock, IconSchool, IconBrain, IconUserCheck, IconLeaf, IconUsersGroup, IconAlertTriangle, IconFlame,
-  IconScale, IconCpu, IconBulb, IconFirstAidKit, IconCheck, IconMail, IconPhone, IconMapPin, IconActivity
+  IconScale, IconCpu, IconBulb, IconFirstAidKit, IconCheck, IconMail, IconPhone, IconMapPin, IconActivity, IconCalendar
 } from '@tabler/icons-react';
 
 // Contact Form Schema
@@ -91,18 +91,18 @@ export default function Home() {
 
   const topics = [
     { title: 'The Internet of Medical Things (IoMT)', desc: 'Connecting remote sensors, smart beds, and patient wearables to standard clinical EHR flows.', icon: IconActivity },
-    { title: 'Cybersecurity & Data Privacy in Nursing', desc: 'Navigating patient confidentiality, clinical database safeguards, and network guidelines.', icon: IconShieldLock },
-    { title: 'Nursing Education & Learning', desc: 'Nex-Gen training methodologies, digital simulation tools, and pedagogical curriculums.', icon: IconSchool },
+    { title: 'Cybersecurity & data privacy in Nursing', desc: 'Navigating patient confidentiality, clinical database safeguards, and network guidelines.', icon: IconShieldLock },
+    { title: 'Nursing Education and Learning', desc: 'Nex-Gen training methodologies, digital simulation tools, and pedagogical curriculums.', icon: IconSchool },
     { title: 'Mental Health & Well-being of Nurses', desc: 'Solutions to clinical burnout, administrative networks, stress audits, and work-life balance.', icon: IconBrain },
     { title: 'Advanced Practices & Expanded Roles', desc: 'Nursing leads, prescriptive authority, critical diagnosis, and independent community practitioners.', icon: IconUserCheck },
-    { title: 'Green Nursing & Healthcare Sustainability', desc: 'Sustainable clinical recycling, clinical carbon reduction, and plastic elimination audits.', icon: IconLeaf },
-    { title: 'Cultural Competency & Trauma-Informed Care', desc: 'Interactions, clinical empathy models, and protective diagnostic environments.', icon: IconUsersGroup },
-    { title: 'Disaster Response & Global Health Security', desc: 'Epidemiological monitoring, pandemic response plans, and humanitarian critical nursing.', icon: IconAlertTriangle },
+    { title: 'Green Nursing & Sustainability', desc: 'Sustainable clinical recycling, clinical carbon reduction, and plastic elimination audits.', icon: IconLeaf },
+    { title: 'Cultural competency & Trauma-Informed care', desc: 'Interactions, clinical empathy models, and protective diagnostic environments.', icon: IconUsersGroup },
+    { title: 'Disaster Response & Global Health security', desc: 'Epidemiological monitoring, pandemic response plans, and humanitarian critical nursing.', icon: IconAlertTriangle },
     { title: 'Maternal & Child Health Milestones', desc: 'Neonatal resuscitation, prenatal nursing, and maternal mortality protection policies.', icon: IconFlame },
     { title: 'Nurses Policy & Advocacy', desc: 'Wage regulations, healthcare representation, staffing laws, and global nursing lobbies.', icon: IconScale },
     { title: 'Role of AI In Healthcare', desc: 'AI diagnostics, prognostic modeling, nurse scheduling scripts, and automated chart parsing.', icon: IconCpu },
-    { title: 'Scaling of Local Innovations', desc: 'Taking regional nurse-led breakthroughs and exporting them to international healthcare platforms.', icon: IconBulb },
-    { title: 'Nursing-Led Primary Care', desc: 'Nurse practitioner clinics, rural healthcare deployment, and bedside preventive care.', icon: IconFirstAidKit }
+    { title: 'Scaling of Local innovations in Nursing', desc: 'Taking regional nurse-led breakthroughs and exporting them to international healthcare platforms.', icon: IconBulb },
+    { title: 'Nursing-Led primary care', desc: 'Nurse practitioner clinics, rural healthcare deployment, and bedside preventive care.', icon: IconFirstAidKit }
   ];
 
   const filteredGallery = galleryCategory === 'ALL'
@@ -136,17 +136,37 @@ export default function Home() {
                   textTransform: 'uppercase'
                 }}
               >
-                Welcome Note
+                Invitation
               </div>
               <Title order={2} style={{ fontFamily: 'var(--font-title)', fontSize: '32px', marginBottom: '20px', lineHeight: 1.25 }}>
-                Innovating Bedside Care & Global Health Security
+                Invitation to GNC 2027
               </Title>
               <Text style={{ lineHeight: 1.7, marginBottom: '15px' }} size="md" c="dimmed">
-                Syntrophy Conferences invites all healthcare professionals, researchers, practitioners, and clinical nurses to be a part of our <b>Global Nursing Conference 2027 (GNC-2027)</b>, which is going to be held in <b>Rome, Italy on May 13-14th, 2027</b>.
+                Syntrophy Conferences welcomes you to attend the <b>Nursing Conference 2027</b> during May 13-14, 2027 in Rome, Italy. We cordially invite all participants who are interested in sharing their knowledge and research in the arena of Nursing and Healthcare.
               </Text>
-              <Text style={{ lineHeight: 1.7, marginBottom: '20px' }} size="md" c="dimmed">
-                The main theme of the conference is <b>"Nex-Gen Nursing – Trends, Techs, Triumphs in Global Health"</b>. Join international delegates and share, discuss, and evaluate current breakthroughs, technological integrations, and policy evolutions transforming medical nursing globally.
+              <Text style={{ lineHeight: 1.7, marginBottom: '15px' }} size="md" c="dimmed">
+                This is an excellent opportunity for delegates from Universities and Institutes to interact with world-class Scientists, build strategic networks, and discover upcoming global tools and innovations.
               </Text>
+              <Text style={{ lineHeight: 1.7, marginBottom: '25px' }} size="md" c="dimmed">
+                Global Nursing Conference 2027 anticipates more than 200 participants from around the globe, featuring thought-provoking Keynote lectures, Oral presentations, and Poster sessions. Intended participants can confirm their participation by registering along with colleagues. Avail the early bird offer to secure your place at this premier gathering.
+              </Text>
+
+              {/* About Syntrophy Block */}
+              <Paper p="lg" radius="md" style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', marginBottom: '25px', boxShadow: 'var(--glass-shadow)' }}>
+                <Text fw={700} style={{ fontFamily: 'var(--font-title)', fontSize: '18px', marginBottom: '10px' }}>
+                  About Syntrophy
+                </Text>
+                <Text size="sm" c="dimmed" style={{ lineHeight: 1.6, marginBottom: '12px' }}>
+                  Syntrophy Global Conferences organize professional events powered with knowledge, experience, and amazing people, providing distinct opportunities for B2B organizers and academic experts. By gathering expert speakers and leading professionals, we deliver strategic growth opportunities.
+                </Text>
+                <Group gap="xs" style={{ marginBottom: '6px' }}>
+                  <Text size="sm">🎯 <b>Our Motto:</b> Making Knowledge accessible</Text>
+                </Group>
+                <Group gap="xs">
+                  <Text size="sm">🚀 <b>Our Mission:</b> To create a global platform for researchers to share and exchange their ideas.</Text>
+                </Group>
+              </Paper>
+
               <Button
                 variant="gradient"
                 gradient={{ from: 'medical.5', to: 'emerald.5' }}
@@ -159,13 +179,37 @@ export default function Home() {
             </motion.div>
 
             <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
-              <Paper radius="lg" style={{ overflow: 'hidden', boxShadow: 'var(--glass-shadow)' }}>
-                <Image
-                  src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&q=80&w=800"
-                  alt="Nursing Innovation"
-                  height={400}
-                />
-              </Paper>
+              <Stack gap="lg">
+                <Paper radius="lg" style={{ overflow: 'hidden', boxShadow: 'var(--glass-shadow)' }}>
+                  <Image
+                    src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&q=80&w=800"
+                    alt="Nursing Innovation"
+                    height={250}
+                  />
+                </Paper>
+
+                {/* Important Dates widget */}
+                <Paper p="lg" radius="lg" style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', boxShadow: 'var(--glass-shadow)' }}>
+                  <Group gap="sm" style={{ marginBottom: '15px' }}>
+                    <div style={{ background: 'rgba(0,119,255,0.1)', color: '#0077ff', borderRadius: '8px', padding: '6px', display: 'flex', alignItems: 'center' }}>
+                      <IconCalendar size={20} />
+                    </div>
+                    <Text fw={700} style={{ fontFamily: 'var(--font-title)', fontSize: '18px' }}>
+                      Important Dates
+                    </Text>
+                  </Group>
+                  <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+                    <Paper p="sm" radius="md" style={{ background: colorScheme === 'dark' ? 'rgba(0,119,255,0.08)' : 'rgba(0,119,255,0.05)', borderLeft: '4px solid #0077ff' }}>
+                      <Text size="xs" fw={700} c="dimmed" style={{ textTransform: 'uppercase', letterSpacing: '0.5px' }}>Abstract Submission</Text>
+                      <Text size="sm" fw={700} style={{ color: colorScheme === 'dark' ? '#ffffff' : 'var(--color-navy-blue)', marginTop: '4px' }}>August 5th, 2027</Text>
+                    </Paper>
+                    <Paper p="sm" radius="md" style={{ background: colorScheme === 'dark' ? 'rgba(16,185,129,0.08)' : 'rgba(16,185,129,0.05)', borderLeft: '4px solid #10b981' }}>
+                      <Text size="xs" fw={700} c="dimmed" style={{ textTransform: 'uppercase', letterSpacing: '0.5px' }}>Registration Starts</Text>
+                      <Text size="sm" fw={700} style={{ color: colorScheme === 'dark' ? '#ffffff' : 'var(--color-navy-blue)', marginTop: '4px' }}>August 10th, 2027</Text>
+                    </Paper>
+                  </SimpleGrid>
+                </Paper>
+              </Stack>
             </motion.div>
           </SimpleGrid>
         </Container>
@@ -570,7 +614,7 @@ export default function Home() {
                   </div>
                   <div>
                     <Text size="xs" fw={700} c="dimmed" style={{ textTransform: 'uppercase' }}>Email Address</Text>
-                    <Text size="sm" fw={600}>nursing@syntrophyconferences.org</Text>
+                    <Text size="sm" fw={600}>contact@nursingconference.net</Text>
                   </div>
                 </Group>
                 
@@ -666,7 +710,7 @@ export default function Home() {
       <AbstractModal opened={abstractOpened} onClose={closeAbstract} />
 
       {/* Footer Section */}
-      <Footer />
+      <Footer onOpenBrochure={openBrochure} onOpenAbstract={openAbstract} />
     </div>
   );
 }

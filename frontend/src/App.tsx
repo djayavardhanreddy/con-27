@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useMantineColorScheme } from '@mantine/core';
 import Home from './pages/Home';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
@@ -12,6 +14,20 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 function App() {
+  const { toggleColorScheme } = useMantineColorScheme();
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Toggle theme on Ctrl + J (case-insensitive)
+      if (event.ctrlKey && event.key.toLowerCase() === 'j') {
+        event.preventDefault();
+        toggleColorScheme();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [toggleColorScheme]);
+
   return (
     <BrowserRouter>
       <Routes>

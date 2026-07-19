@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Modal, TextInput, Select, Button, Stack, Text, Alert, Group, Paper, ActionIcon } from '@mantine/core';
+import { Modal, TextInput, Select, Button, Stack, Text, Alert, Group, Paper, ActionIcon, useMantineColorScheme } from '@mantine/core';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -27,6 +27,7 @@ interface AbstractModalProps {
 }
 
 export default function AbstractModal({ opened, onClose }: AbstractModalProps) {
+  const { colorScheme } = useMantineColorScheme();
   const [file, setFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState<boolean>(false);
   const [fileError, setFileError] = useState<string | null>(null);
@@ -279,8 +280,8 @@ export default function AbstractModal({ opened, onClose }: AbstractModalProps) {
                 onDragLeave={handleDrag}
                 onDrop={handleDrop}
                 style={{
-                  border: `2px dashed ${dragActive ? 'var(--color-medical-blue)' : '#cbd5e1'}`,
-                  backgroundColor: dragActive ? 'rgba(0,119,255,0.05)' : 'rgba(248, 250, 252, 0.5)',
+                  border: `2px dashed ${dragActive ? 'var(--color-medical-blue)' : (colorScheme === 'dark' ? 'rgba(255, 255, 255, 0.15)' : '#cbd5e1')}`,
+                  backgroundColor: dragActive ? 'rgba(0, 119, 255, 0.08)' : (colorScheme === 'dark' ? 'rgba(255, 255, 255, 0.02)' : 'rgba(248, 250, 252, 0.5)'),
                   padding: '30px 20px',
                   borderRadius: '12px',
                   cursor: 'pointer',
@@ -298,9 +299,9 @@ export default function AbstractModal({ opened, onClose }: AbstractModalProps) {
                 />
                 <label htmlFor="abstract-file-upload" style={{ cursor: 'pointer' }}>
                   <Stack gap="xs" align="center">
-                    <IconUpload size={40} color="#94a3b8" />
+                    <IconUpload size={40} color={colorScheme === 'dark' ? '#0077ff' : '#94a3b8'} />
                     <div>
-                      <Text size="sm" fw={600}>
+                      <Text size="sm" fw={600} style={{ color: colorScheme === 'dark' ? '#ffffff' : 'var(--color-text-dark)' }}>
                         Drag & drop your abstract document here, or <span style={{ color: '#0077ff' }}>browse files</span>
                       </Text>
                       <Text size="xs" c="dimmed">

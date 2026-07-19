@@ -13,7 +13,12 @@ const newsletterSchema = z.object({
 
 type NewsletterFormData = z.infer<typeof newsletterSchema>;
 
-export default function Footer() {
+interface FooterProps {
+  onOpenBrochure?: () => void;
+  onOpenAbstract?: () => void;
+}
+
+export default function Footer({ onOpenBrochure, onOpenAbstract }: FooterProps = {}) {
   const { colorScheme } = useMantineColorScheme();
   const {
     register,
@@ -120,8 +125,8 @@ export default function Footer() {
             
             <Stack gap="xs">
               <Text size="sm" style={{ cursor: 'pointer' }} c="rgba(255,255,255,0.6)" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Home</Text>
-              <Text size="sm" style={{ cursor: 'pointer' }} c="rgba(255,255,255,0.6)" onClick={() => handleScrollTo('#agenda')}>Brochure Download</Text>
-              <Text size="sm" style={{ cursor: 'pointer' }} c="rgba(255,255,255,0.6)" onClick={() => handleScrollTo('#agenda')}>Abstract Submission</Text>
+              <Text size="sm" style={{ cursor: 'pointer' }} c="rgba(255,255,255,0.6)" onClick={onOpenBrochure || (() => handleScrollTo('#agenda'))}>Brochure Download</Text>
+              <Text size="sm" style={{ cursor: 'pointer' }} c="rgba(255,255,255,0.6)" onClick={onOpenAbstract || (() => handleScrollTo('#agenda'))}>Abstract Submission</Text>
               <Text size="sm" style={{ cursor: 'pointer' }} c="rgba(255,255,255,0.6)" onClick={() => handleScrollTo('#agenda')}>Agenda Timeline</Text>
               <Text size="sm" style={{ cursor: 'pointer' }} c="rgba(255,255,255,0.6)" onClick={() => handleScrollTo('#registration')}>Registration Options</Text>
               <Text size="sm" style={{ cursor: 'pointer' }} c="rgba(255,255,255,0.6)" onClick={() => handleScrollTo('#faqs')}>FAQs</Text>

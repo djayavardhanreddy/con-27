@@ -453,7 +453,7 @@ db.on('populate', () => {
     { key: 'conference_theme', value: 'Nex-Gen Nursing – Trends, Techs, Triumphs in Global Health' },
     { key: 'conference_dates', value: 'May 13-14, 2027' },
     { key: 'conference_venue', value: 'To be announced, Rome, Italy' },
-    { key: 'support_email', value: 'nursing@syntrophyconferences.org' },
+    { key: 'support_email', value: 'contact@nursingconference.net' },
     { key: 'support_phone', value: '+39 06 1234567' }
   ]);
 });

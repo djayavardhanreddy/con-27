@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Container, Tabs, Table, Card, Text, Title, Group, Button, Badge, TextInput, Select, Modal, Textarea,
-  ActionIcon, SimpleGrid, Stack, Box, Space, Menu
+  ActionIcon, SimpleGrid, Stack, Box, Space, Menu, useMantineColorScheme
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { useMutation } from '@tanstack/react-query';
@@ -17,6 +17,7 @@ import { db } from '../services/db';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
+  const { colorScheme } = useMantineColorScheme();
   const [activeTab, setActiveTab] = useState<string>('analytics');
 
   // Search & Filter States
@@ -400,7 +401,7 @@ export default function AdminDashboard() {
   const user = userJson ? JSON.parse(userJson) : { name: 'Admin' };
 
   return (
-    <div style={{ background: '#f8fafc', minHeight: '100vh', paddingBottom: '50px' }}>
+    <div style={{ background: colorScheme === 'dark' ? '#0c1a30' : '#f8fafc', minHeight: '100vh', paddingBottom: '50px' }}>
       
       {/* Header bar */}
       <Box style={{ background: '#0c1a30', color: '#fff', padding: '15px 0', borderBottom: '3px solid #0077ff' }}>
