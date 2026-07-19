@@ -44,11 +44,11 @@ export default function Header({ onOpenBrochure, onOpenAbstract }: HeaderProps) 
 
   const navItems = [
     { label: 'Home', action: () => window.scrollTo({ top: 0, behavior: 'smooth' }) },
-    { label: 'Brochure Download', action: onOpenBrochure },
-    { label: 'Abstract Submission', action: onOpenAbstract },
+    { label: 'Brochure', action: onOpenBrochure },
+    { label: 'Abstracts', action: onOpenAbstract },
     { label: 'Agenda', action: () => handleNavClick('#agenda') },
-    { label: 'Registration', action: () => handleNavClick('#registration') },
-    { label: 'Contact Us', action: () => handleNavClick('#contact') },
+    { label: 'Register', action: () => handleNavClick('#registration') },
+    { label: 'Contact', action: () => handleNavClick('#contact') },
     { label: 'FAQs', action: () => handleNavClick('#faqs') },
   ];
 
@@ -64,17 +64,13 @@ export default function Header({ onOpenBrochure, onOpenAbstract }: HeaderProps) 
         display: 'flex',
         alignItems: 'center',
         transition: 'all 0.3s ease',
-        background: scrolled 
-          ? (colorScheme === 'dark' ? 'rgba(12, 26, 48, 0.85)' : 'rgba(255, 255, 255, 0.85)') 
-          : 'transparent',
-        backdropFilter: scrolled ? 'blur(12px)' : 'none',
-        WebkitBackdropFilter: scrolled ? 'blur(12px)' : 'none',
-        borderBottom: scrolled 
-          ? (colorScheme === 'dark' ? '1px solid rgba(255, 255, 255, 0.05)' : '1px solid rgba(0, 0, 0, 0.05)') 
-          : 'none',
-        boxShadow: scrolled 
-          ? '0 8px 32px 0 rgba(31, 38, 135, 0.08)' 
-          : 'none'
+        background: colorScheme === 'dark' 
+          ? (scrolled ? 'rgba(12, 26, 48, 0.85)' : 'rgba(12, 26, 48, 0.65)') 
+          : (scrolled ? 'rgba(255, 255, 255, 0.85)' : 'rgba(255, 255, 255, 0.65)'),
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        borderBottom: colorScheme === 'dark' ? '1px solid rgba(255, 255, 255, 0.05)' : '1px solid rgba(0, 0, 0, 0.05)',
+        boxShadow: scrolled ? '0 8px 32px 0 rgba(31, 38, 135, 0.08)' : 'none'
       }}
     >
       <Container size="xl" style={{ width: '100%' }}>
@@ -89,26 +85,18 @@ export default function Header({ onOpenBrochure, onOpenAbstract }: HeaderProps) 
           </Group>
 
           {/* Desktop Navigation Links */}
-          <Group gap="xl" visibleFrom="lg">
+          <Group gap="xl" visibleFrom="xl">
             {navItems.map((item) => (
               <Button
                 key={item.label}
                 variant="transparent"
                 onClick={item.action}
-                styles={{
-                  root: {
-                    color: scrolled
-                      ? 'var(--color-text-dark)'
-                      : (colorScheme === 'dark' ? '#fff' : '#0c1a30'),
-                    fontWeight: 500,
-                    fontSize: '14px',
-                    fontFamily: 'var(--font-sans)',
-                    padding: '0 8px',
-                    '&:hover': {
-                      color: 'var(--color-medical-blue)',
-                      backgroundColor: 'transparent'
-                    }
-                  }
+                className="header-nav-btn"
+                style={{
+                  fontWeight: 600,
+                  fontSize: '14px',
+                  fontFamily: 'var(--font-sans)',
+                  padding: '0 8px'
                 }}
               >
                 {item.label}
@@ -123,9 +111,9 @@ export default function Header({ onOpenBrochure, onOpenAbstract }: HeaderProps) 
               onClick={() => toggleColorScheme()}
               size="lg"
               radius="md"
-              color={scrolled ? 'blue' : 'gray'}
+              color={colorScheme === 'dark' ? 'yellow' : 'blue'}
             >
-              {colorScheme === 'dark' ? <IconSun size={20} color={scrolled ? undefined : '#fff'} /> : <IconMoon size={20} color={scrolled ? undefined : '#0c1a30'} />}
+              {colorScheme === 'dark' ? <IconSun size={20} /> : <IconMoon size={20} />}
             </ActionIcon>
 
             <Button
@@ -141,7 +129,7 @@ export default function Header({ onOpenBrochure, onOpenAbstract }: HeaderProps) 
               Register Now
             </Button>
 
-            <Burger opened={opened} onClick={toggle} hiddenFrom="lg" size="sm" color={scrolled ? undefined : (colorScheme === 'dark' ? '#fff' : '#0c1a30')} />
+            <Burger opened={opened} onClick={toggle} hiddenFrom="xl" size="sm" color={colorScheme === 'dark' ? '#fff' : '#0c1a30'} />
           </Group>
         </Group>
       </Container>
@@ -153,7 +141,7 @@ export default function Header({ onOpenBrochure, onOpenAbstract }: HeaderProps) 
         size="md"
         padding="xl"
         title="Navigation Menu"
-        hiddenFrom="lg"
+        hiddenFrom="xl"
         styles={{
           header: { fontFamily: 'var(--font-title)', fontWeight: 700 },
           body: { paddingTop: '20px' }

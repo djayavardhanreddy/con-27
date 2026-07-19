@@ -43,7 +43,7 @@ export default function Hero({ onOpenBrochure, onOpenAbstract }: HeroProps) {
   };
 
   const stats = [
-    { label: 'Delegates', value: '1000+', icon: IconUsers },
+    { label: 'Presentations', value: '80+', icon: IconUsers },
     { label: 'Speakers', value: '50+', icon: IconMicrophone },
     { label: 'Countries', value: '30+', icon: IconGlobe },
     { label: 'Research Papers', value: '100+', icon: IconFileText }

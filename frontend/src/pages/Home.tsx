@@ -201,11 +201,11 @@ export default function Home() {
                   <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
                     <Paper p="sm" radius="md" style={{ background: colorScheme === 'dark' ? 'rgba(0,119,255,0.08)' : 'rgba(0,119,255,0.05)', borderLeft: '4px solid #0077ff' }}>
                       <Text size="xs" fw={700} c="dimmed" style={{ textTransform: 'uppercase', letterSpacing: '0.5px' }}>Abstract Submission</Text>
-                      <Text size="sm" fw={700} style={{ color: colorScheme === 'dark' ? '#ffffff' : 'var(--color-navy-blue)', marginTop: '4px' }}>August 5th, 2027</Text>
+                      <Text size="sm" fw={700} style={{ color: colorScheme === 'dark' ? '#ffffff' : 'var(--color-navy-blue)', marginTop: '4px' }}>August 5th, 2026</Text>
                     </Paper>
                     <Paper p="sm" radius="md" style={{ background: colorScheme === 'dark' ? 'rgba(16,185,129,0.08)' : 'rgba(16,185,129,0.05)', borderLeft: '4px solid #10b981' }}>
                       <Text size="xs" fw={700} c="dimmed" style={{ textTransform: 'uppercase', letterSpacing: '0.5px' }}>Registration Starts</Text>
-                      <Text size="sm" fw={700} style={{ color: colorScheme === 'dark' ? '#ffffff' : 'var(--color-navy-blue)', marginTop: '4px' }}>August 10th, 2027</Text>
+                      <Text size="sm" fw={700} style={{ color: colorScheme === 'dark' ? '#ffffff' : 'var(--color-navy-blue)', marginTop: '4px' }}>August 10th, 2026</Text>
                     </Paper>
                   </SimpleGrid>
                 </Paper>
@@ -283,8 +283,8 @@ export default function Home() {
         </Container>
       </Box>
 
-      {/* Speakers Section */}
-      <Box component="section" id="speakers" style={{ padding: '80px 0', background: 'var(--color-light-gray)' }}>
+      {/* Speakers Section - Hidden visually using style */}
+      <Box component="section" id="speakers" style={{ display: 'none' }}>
         <Container size="xl">
           <Stack align="center" gap="xs" style={{ textAlign: 'center', marginBottom: '50px' }}>
             <div style={{ background: 'rgba(0,119,255,0.08)', color: 'var(--color-medical-blue)', padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: 700, letterSpacing: '1px', display: 'inline-block', textTransform: 'uppercase' }}>
@@ -461,16 +461,11 @@ export default function Home() {
         </Container>
       </Box>
 
-      {/* Sponsors Section */}
+      {/* Sponsors Section - Hidden visually using style */}
       <Box 
         component="section" 
         id="sponsors" 
-        style={{ 
-          padding: '60px 0', 
-          background: colorScheme === 'dark' ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.4)',
-          borderTop: colorScheme === 'dark' ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.05)',
-          borderBottom: colorScheme === 'dark' ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.05)'
-        }}
+        style={{ display: 'none' }}
       >
         <Container size="xl">
           <Text 
@@ -618,7 +613,8 @@ export default function Home() {
                   </div>
                 </Group>
                 
-                <Group gap="sm">
+                {/* Phone number and Office address hidden visually using style */}
+                <Group gap="sm" style={{ display: 'none' }}>
                   <div style={{ background: 'rgba(0,119,255,0.1)', color: '#0077ff', borderRadius: '10px', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: '8px' }}>
                     <IconPhone size={22} />
                   </div>
@@ -628,7 +624,7 @@ export default function Home() {
                   </div>
                 </Group>
 
-                <Group gap="sm">
+                <Group gap="sm" style={{ display: 'none' }}>
                   <div style={{ background: 'rgba(0,119,255,0.1)', color: '#0077ff', borderRadius: '10px', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: '8px' }}>
                     <IconMapPin size={22} />
                   </div>

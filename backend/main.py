@@ -1,7 +1,8 @@
 import os
 import jwt
 import datetime
-from typing import List, Optional
+import json
+from typing import List, Optional, Dict
 from fastapi import FastAPI, HTTPException, UploadFile, File, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -20,24 +21,336 @@ from reportlab.lib import colors
 JWT_SECRET = os.getenv("JWT_SECRET", "supersecretjwttokenkey987654321!")
 JWT_ALGORITHM = "HS256"
 ADMIN_EMAIL = "admin@con27.org"
-ADMIN_PASSWORD = "password123"  # Standard default matching seed
+ADMIN_PASSWORD = "password123"
 
-# Ensure upload directory exists
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+DB_FILE = "db.json"
+
+# Seed Data
+DEFAULT_SPEAKERS = [
+    {
+        "id": "sp1",
+        "name": "Dr. Evelyn Carter",
+        "designation": "Lead Researcher, Healthcare Informatics",
+        "organization": "MIT Research Labs",
+        "country": "United States",
+        "imagePath": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=400",
+        "bio": "Dr. Evelyn Carter is a pioneer in clinical health informatics. Her research focuses on integrating IoMT devices with EHRs to enhance bedside nursing protocols.",
+        "twitter": "https://twitter.com",
+        "linkedin": "https://linkedin.com",
+        "order": 1,
+        "createdAt": datetime.datetime.utcnow().isoformat() + "Z"
+    },
+    {
+        "id": "sp2",
+        "name": "Prof. Giovanni Rossi",
+        "designation": "Director of Cardiology & Nursing Care",
+        "organization": "Sapienza University of Rome",
+        "country": "Italy",
+        "imagePath": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=400",
+        "bio": "Prof. Rossi has over 25 years of experience in cardiac patient recovery. He is a primary consultant for emergency response and global healthcare security programs in Europe.",
+        "twitter": "https://twitter.com",
+        "linkedin": "https://linkedin.com",
+        "order": 2,
+        "createdAt": datetime.datetime.utcnow().isoformat() + "Z"
+    },
+    {
+        "id": "sp3",
+        "name": "Dr. Sarah Jenkins",
+        "designation": "Consultant in Midwifery & Neonatal Care",
+        "organization": "King's College London",
+        "country": "United Kingdom",
+        "imagePath": "https://images.unsplash.com/photo-1594824813573-246434de83fb?auto=format&fit=crop&q=80&w=400",
+        "bio": "Dr. Jenkins focuses on maternal and child health milestones, advocating for primary midwife leadership roles in rural and underserved community clinics.",
+        "twitter": "https://twitter.com",
+        "linkedin": "https://linkedin.com",
+        "order": 3,
+        "createdAt": datetime.datetime.utcnow().isoformat() + "Z"
+    },
+    {
+        "id": "sp4",
+        "name": "Amina Al-Mansoor",
+        "designation": "Lead Advisor on Global Health Policy",
+        "organization": "World Health Organization (WHO)",
+        "country": "Switzerland",
+        "imagePath": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400",
+        "bio": "Amina Al-Mansoor leads advocacy initiatives for nurses worldwide. Her work promotes policy updates to support green nursing and environmental sustainability in hospital environments.",
+        "twitter": "https://twitter.com",
+        "linkedin": "https://linkedin.com",
+        "order": 4,
+        "createdAt": datetime.datetime.utcnow().isoformat() + "Z"
+    }
+]
+
+DEFAULT_AGENDA = [
+    {
+        "id": "ag1",
+        "day": 1,
+        "timeSlot": "08:00 AM - 09:00 AM",
+        "title": "Registration & Welcome Coffee",
+        "description": "Pick up your conference badges, credentials, and brochure material at the main entrance lobby.",
+        "speakerName": "",
+        "location": "Lobby & Exhibition Hall",
+        "type": "BREAK",
+        "order": 1,
+        "createdAt": datetime.datetime.utcnow().isoformat() + "Z"
+    },
+    {
+        "id": "ag2",
+        "day": 1,
+        "timeSlot": "09:00 AM - 09:30 AM",
+        "title": "Inaugural Ceremony & Opening Address",
+        "description": "Welcoming remarks and overview of the main theme: \"Nex-Gen Nursing: Trends, Techs, Triumphs in Global Health\".",
+        "speakerName": "Conference Chairman",
+        "location": "Main Auditorium (Hall A)",
+        "type": "KEYNOTE",
+        "order": 2,
+        "createdAt": datetime.datetime.utcnow().isoformat() + "Z"
+    },
+    {
+        "id": "ag3",
+        "day": 1,
+        "timeSlot": "09:30 AM - 10:30 AM",
+        "title": "Keynote Session: The Internet of Medical Things (IoMT) in Modern Bedside Care",
+        "description": "How smart wearable monitors, automated drug dispensers, and real-time trackers are transforming intensive nursing care.",
+        "speakerName": "Dr. Evelyn Carter",
+        "location": "Main Auditorium (Hall A)",
+        "type": "KEYNOTE",
+        "order": 3,
+        "createdAt": datetime.datetime.utcnow().isoformat() + "Z"
+    },
+    {
+        "id": "ag4",
+        "day": 1,
+        "timeSlot": "10:30 AM - 11:00 AM",
+        "title": "Morning Networking Coffee Break",
+        "description": "Coffee, tea, and local Italian pastries in the exhibition area.",
+        "speakerName": "",
+        "location": "Exhibition Hall",
+        "type": "BREAK",
+        "order": 4,
+        "createdAt": datetime.datetime.utcnow().isoformat() + "Z"
+    },
+    {
+        "id": "ag5",
+        "day": 1,
+        "timeSlot": "11:00 AM - 12:30 PM",
+        "title": "Panel Discussion: Cybersecurity, Data Privacy, and AI in Healthcare Systems",
+        "description": "Balancing digital convenience with patient confidentiality. Discussing best practices under global security laws.",
+        "speakerName": "Dr. Evelyn Carter, Amina Al-Mansoor, Prof. Giovanni Rossi",
+        "location": "Main Auditorium (Hall A)",
+        "type": "PANEL",
+        "order": 5,
+        "createdAt": datetime.datetime.utcnow().isoformat() + "Z"
+    },
+    {
+        "id": "ag6",
+        "day": 1,
+        "timeSlot": "12:30 PM - 01:30 PM",
+        "title": "Networking Buffet Lunch",
+        "description": "Complimentary buffet lunch serving fine Italian cuisine.",
+        "speakerName": "",
+        "location": "Dining Lounge",
+        "type": "BREAK",
+        "order": 6,
+        "createdAt": datetime.datetime.utcnow().isoformat() + "Z"
+    },
+    {
+        "id": "ag7",
+        "day": 1,
+        "timeSlot": "01:30 PM - 03:00 PM",
+        "title": "Track A: Green Nursing & Healthcare Sustainability",
+        "description": "Examining hospital recycling, reduction of plastic waste, and ecological pathways to nursing practice.",
+        "speakerName": "Amina Al-Mansoor",
+        "location": "Seminar Room B",
+        "type": "SESSION",
+        "order": 7,
+        "createdAt": datetime.datetime.utcnow().isoformat() + "Z"
+    },
+    {
+        "id": "ag8",
+        "day": 1,
+        "timeSlot": "03:00 PM - 04:30 PM",
+        "title": "Track B: Mental Health & Well-being of Nurses",
+        "description": "Addressing clinical burnout, mindfulness exercises, administrative support networks, and nurse advocacy.",
+        "speakerName": "Prof. Giovanni Rossi",
+        "location": "Seminar Room C",
+        "type": "SESSION",
+        "order": 8,
+        "createdAt": datetime.datetime.utcnow().isoformat() + "Z"
+    },
+    {
+        "id": "ag9",
+        "day": 2,
+        "timeSlot": "09:00 AM - 10:30 AM",
+        "title": "Keynote Session: Maternal & Child Health Milestones & Primary Care Delivery",
+        "description": "New guidelines in neonatology, prenatal nutrition, and maternal nursing leads in primary care communities.",
+        "speakerName": "Dr. Sarah Jenkins",
+        "location": "Main Auditorium (Hall A)",
+        "type": "KEYNOTE",
+        "order": 1,
+        "createdAt": datetime.datetime.utcnow().isoformat() + "Z"
+    },
+    {
+        "id": "ag10",
+        "day": 2,
+        "timeSlot": "10:30 AM - 11:00 AM",
+        "title": "Morning Coffee Break",
+        "description": "Mid-morning refreshments and poster presentations review.",
+        "speakerName": "",
+        "location": "Exhibition Hall",
+        "type": "BREAK",
+        "order": 2,
+        "createdAt": datetime.datetime.utcnow().isoformat() + "Z"
+    },
+    {
+        "id": "ag11",
+        "day": 2,
+        "timeSlot": "11:00 AM - 12:30 PM",
+        "title": "Oral Presentations: Scaling Local Innovations in Nursing Practice",
+        "description": "Presentations by selected researchers displaying nurse-led innovations from 15+ countries.",
+        "speakerName": "Various Researchers",
+        "location": "Main Auditorium (Hall A)",
+        "type": "SESSION",
+        "order": 3,
+        "createdAt": datetime.datetime.utcnow().isoformat() + "Z"
+    },
+    {
+        "id": "ag12",
+        "day": 2,
+        "timeSlot": "12:30 PM - 01:30 PM",
+        "title": "Networking Lunch",
+        "description": "Buffet lunch and final networking session.",
+        "speakerName": "",
+        "location": "Dining Lounge",
+        "type": "BREAK",
+        "order": 4,
+        "createdAt": datetime.datetime.utcnow().isoformat() + "Z"
+    },
+    {
+        "id": "ag13",
+        "day": 2,
+        "timeSlot": "01:30 PM - 03:00 PM",
+        "title": "Session: Disaster Response & Global Health Security",
+        "description": "Coordinated nursing protocols in natural crises, pandemic prevention, and international clinical volunteering.",
+        "speakerName": "Prof. Giovanni Rossi",
+        "location": "Main Auditorium (Hall A)",
+        "type": "SESSION",
+        "order": 5,
+        "createdAt": datetime.datetime.utcnow().isoformat() + "Z"
+    },
+    {
+        "id": "ag14",
+        "day": 2,
+        "timeSlot": "03:00 PM - 04:00 PM",
+        "title": "Valedictory Session & Best Paper Award Ceremony",
+        "description": "Closing statements, certificates distribution, and announcement of the Best Research Paper Award.",
+        "speakerName": "Conference Chairs",
+        "location": "Main Auditorium (Hall A)",
+        "type": "SOCIAL",
+        "order": 6,
+        "createdAt": datetime.datetime.utcnow().isoformat() + "Z"
+    }
+]
+
+DEFAULT_FAQS = [
+    {
+        "id": "faq1",
+        "question": "When and where is the conference taking place?",
+        "answer": "The Global Nursing Conference 2027 will take place on May 13-14, 2027 in Rome, Italy. The specific venue hotel details will be updated on the website shortly.",
+        "order": 1,
+        "createdAt": datetime.datetime.utcnow().isoformat() + "Z"
+    },
+    {
+        "id": "faq2",
+        "question": "What is the theme of the conference?",
+        "answer": "The core theme is \"Nex-Gen Nursing: Trends, Techs, Triumphs in Global Health\", highlighting the integration of AI, IoMT, and digital healthcare in the nursing sector.",
+        "order": 2,
+        "createdAt": datetime.datetime.utcnow().isoformat() + "Z"
+    },
+    {
+        "id": "faq3",
+        "question": "How do I download the conference brochure?",
+        "answer": "Click on the \"Brochure Download\" tab, complete the short form with your name, email, phone, and country, and you will immediately be able to download the official brochure PDF.",
+        "order": 3,
+        "createdAt": datetime.datetime.utcnow().isoformat() + "Z"
+    },
+    {
+        "id": "faq4",
+        "question": "What are the formats allowed for Abstract Submission?",
+        "answer": "Abstracts must be submitted as either PDF or Microsoft Word (DOCX) files. You can download the abstract sample template from the Abstract Submission page for format instructions.",
+        "order": 4,
+        "createdAt": datetime.datetime.utcnow().isoformat() + "Z"
+    },
+    {
+        "id": "faq5",
+        "question": "Can I pay for registration through bank transfers or credit cards?",
+        "answer": "Yes, we accept major credit card payments, PayPal, and offline bank transfers. Please note that a 2% processing surcharge applies for PayPal payments. For group package discounts, please email us directly.",
+        "order": 5,
+        "createdAt": datetime.datetime.utcnow().isoformat() + "Z"
+    }
+]
+
+DEFAULT_SPONSORS = [
+    {
+        "id": "spn1",
+        "name": "Syntrophy Conferences",
+        "logoPath": "/logo_light.png",
+        "websiteUrl": "https://syntrophy.com",
+        "tier": "PLATINUM",
+        "order": 1,
+        "createdAt": datetime.datetime.utcnow().isoformat() + "Z"
+    },
+    {
+        "id": "spn2",
+        "name": "BioTech Health Solutions",
+        "logoPath": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80&w=200",
+        "websiteUrl": "https://biotech.com",
+        "tier": "GOLD",
+        "order": 2,
+        "createdAt": datetime.datetime.utcnow().isoformat() + "Z"
+    },
+    {
+        "id": "spn3",
+        "name": "Rome Medical Center",
+        "logoPath": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=200",
+        "websiteUrl": "https://romemedical.it",
+        "tier": "SILVER",
+        "order": 3,
+        "createdAt": datetime.datetime.utcnow().isoformat() + "Z"
+    }
+]
+
+DEFAULT_GALLERY = [
+    { "id": "gal1", "title": "Colosseum, Rome", "imagePath": "https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&q=80&w=600", "category": "ROME", "createdAt": datetime.datetime.utcnow().isoformat() + "Z" },
+    { "id": "gal2", "title": "Vatican City", "imagePath": "https://images.unsplash.com/photo-1542820229-081e0c12af0b?auto=format&fit=crop&q=80&w=600", "category": "ROME", "createdAt": datetime.datetime.utcnow().isoformat() + "Z" },
+    { "id": "gal3", "title": "Trevi Fountain", "imagePath": "https://images.unsplash.com/photo-1531572753322-ad063cecc140?auto=format&fit=crop&q=80&w=600", "category": "ROME", "createdAt": datetime.datetime.utcnow().isoformat() + "Z" },
+    { "id": "gal4", "title": "Previous Conference Keynote", "imagePath": "https://images.unsplash.com/photo-1475721027785-f74eccf877e2?auto=format&fit=crop&q=80&w=600", "category": "CONFERENCE", "createdAt": datetime.datetime.utcnow().isoformat() + "Z" },
+    { "id": "gal5", "title": "Panel Session Discussion", "imagePath": "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80&w=600", "category": "CONFERENCE", "createdAt": datetime.datetime.utcnow().isoformat() + "Z" },
+    { "id": "gal6", "title": "Poster Session Networking", "imagePath": "https://images.unsplash.com/photo-1515187029135-18ee286d815b?auto=format&fit=crop&q=80&w=600", "category": "CONFERENCE", "createdAt": datetime.datetime.utcnow().isoformat() + "Z" }
+]
+
+DEFAULT_SETTINGS = [
+    { "key": "conference_title", "value": "Global Nursing Conference 2027" },
+    { "key": "conference_theme", "value": "Nex-Gen Nursing: Trends, Techs, Triumphs in Global Health" },
+    { "key": "conference_dates", "value": "May 13-14, 2027" },
+    { "key": "conference_venue", "value": "To be announced, Rome, Italy" },
+    { "key": "support_email", "value": "contact@nursingconference.net" },
+    { "key": "support_phone", "value": "+39 06 1234567" }
+]
+
 app = FastAPI(title="con-27 Python API", version="1.0.0")
 
-# Enable CORS for frontend web server
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Adjust in production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Mount static uploads folder
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 # --- SCHEMAS ---
@@ -48,7 +361,67 @@ class LoginRequest(BaseModel):
 class ExportDataRequest(BaseModel):
     data: List[dict]
 
-# --- HELPERS ---
+class RegistrationInput(BaseModel):
+    name: str
+    email: str
+    phone: str
+    country: str
+    package: str
+    amount: float
+    paymentMethod: str
+    comments: Optional[str] = None
+
+class AbstractInput(BaseModel):
+    prefix: str
+    name: str
+    email: str
+    phone: str
+    profession: str
+    country: str
+    title: str
+    fileName: str
+    filePath: str
+
+class BrochureInput(BaseModel):
+    name: str
+    email: str
+    phone: str
+    country: str
+    query: Optional[str] = None
+
+class MessageInput(BaseModel):
+    name: str
+    email: str
+    phone: Optional[str] = None
+    subject: Optional[str] = None
+    message: str
+
+# Helper to read/write JSON file DB
+def load_db() -> Dict:
+    if not os.path.exists(DB_FILE):
+        initial = {
+            "registrations": [],
+            "abstracts": [],
+            "brochureDownloads": [],
+            "contactMessages": [],
+            "speakers": DEFAULT_SPEAKERS,
+            "agenda": DEFAULT_AGENDA,
+            "sponsors": DEFAULT_SPONSORS,
+            "gallery": DEFAULT_GALLERY,
+            "settings": DEFAULT_SETTINGS,
+            "faqs": DEFAULT_FAQS
+        }
+        save_db(initial)
+    try:
+        with open(DB_FILE, "r") as f:
+            return json.load(f)
+    except Exception:
+        return {"registrations": [], "abstracts": [], "brochureDownloads": [], "contactMessages": [], "speakers": [], "agenda": [], "sponsors": [], "gallery": [], "settings": [], "faqs": []}
+
+def save_db(data: Dict):
+    with open(DB_FILE, "w") as f:
+        json.dump(data, f, indent=2)
+
 def create_token(email: str) -> str:
     payload = {
         "sub": email,
@@ -86,6 +459,74 @@ def login(payload: LoginRequest):
         }
     raise HTTPException(status_code=401, detail="Invalid email or password")
 
+# Registrations
+@app.get("/api/registrations")
+def get_registrations():
+    db_data = load_db()
+    return db_data.get("registrations", [])
+
+@app.post("/api/registrations")
+def add_registration(payload: RegistrationInput):
+    db_data = load_db()
+    new_reg = payload.dict()
+    new_reg["id"] = f"reg_{int(datetime.datetime.utcnow().timestamp())}_{len(db_data['registrations'])}"
+    new_reg["status"] = "PENDING"
+    new_reg["createdAt"] = datetime.datetime.utcnow().isoformat() + "Z"
+    db_data["registrations"].append(new_reg)
+    save_db(db_data)
+    return new_reg
+
+@app.put("/api/registrations/{id}")
+def update_registration(id: str, updates: Dict, user: str = Depends(verify_token)):
+    db_data = load_db()
+    for idx, reg in enumerate(db_data["registrations"]):
+        if reg["id"] == id:
+            reg.update(updates)
+            save_db(db_data)
+            return reg
+    raise HTTPException(status_code=404, detail="Registration not found")
+
+@app.delete("/api/registrations/{id}")
+def delete_registration(id: str, user: str = Depends(verify_token)):
+    db_data = load_db()
+    db_data["registrations"] = [r for r in db_data["registrations"] if r["id"] != id]
+    save_db(db_data)
+    return {"success": True}
+
+# Abstracts
+@app.get("/api/abstracts")
+def get_abstracts():
+    db_data = load_db()
+    return db_data.get("abstracts", [])
+
+@app.post("/api/abstracts")
+def add_abstract(payload: AbstractInput):
+    db_data = load_db()
+    new_abs = payload.dict()
+    new_abs["id"] = f"abs_{int(datetime.datetime.utcnow().timestamp())}_{len(db_data['abstracts'])}"
+    new_abs["status"] = "PENDING"
+    new_abs["createdAt"] = datetime.datetime.utcnow().isoformat() + "Z"
+    db_data["abstracts"].append(new_abs)
+    save_db(db_data)
+    return new_abs
+
+@app.put("/api/abstracts/{id}")
+def update_abstract(id: str, updates: Dict, user: str = Depends(verify_token)):
+    db_data = load_db()
+    for idx, abs_item in enumerate(db_data["abstracts"]):
+        if abs_item["id"] == id:
+            abs_item.update(updates)
+            save_db(db_data)
+            return abs_item
+    raise HTTPException(status_code=404, detail="Abstract not found")
+
+@app.delete("/api/abstracts/{id}")
+def delete_abstract(id: str, user: str = Depends(verify_token)):
+    db_data = load_db()
+    db_data["abstracts"] = [a for a in db_data["abstracts"] if a["id"] != id]
+    save_db(db_data)
+    return {"success": True}
+
 @app.post("/api/abstracts/upload")
 async def upload_abstract(file: UploadFile = File(...)):
     filename = file.filename
@@ -93,7 +534,6 @@ async def upload_abstract(file: UploadFile = File(...)):
     if ext not in ["pdf", "doc", "docx"]:
         raise HTTPException(status_code=400, detail="Only PDF, DOC, or DOCX files are allowed.")
     
-    # Save the file locally using a secure timestamped filename to prevent naming collisions
     safe_filename = f"{int(datetime.datetime.utcnow().timestamp())}_{filename}"
     file_path = os.path.join(UPLOAD_DIR, safe_filename)
     
@@ -106,6 +546,253 @@ async def upload_abstract(file: UploadFile = File(...)):
         "fileName": filename
     }
 
+# Brochure leads
+@app.get("/api/brochures")
+def get_brochure_leads():
+    db_data = load_db()
+    return db_data.get("brochureDownloads", [])
+
+@app.post("/api/brochures")
+def add_brochure_lead(payload: BrochureInput):
+    db_data = load_db()
+    new_lead = payload.dict()
+    new_lead["id"] = f"lead_{int(datetime.datetime.utcnow().timestamp())}_{len(db_data['brochureDownloads'])}"
+    new_lead["createdAt"] = datetime.datetime.utcnow().isoformat() + "Z"
+    db_data["brochureDownloads"].append(new_lead)
+    save_db(db_data)
+    return new_lead
+
+@app.delete("/api/brochures/{id}")
+def delete_brochure_lead(id: str, user: str = Depends(verify_token)):
+    db_data = load_db()
+    db_data["brochureDownloads"] = [b for b in db_data["brochureDownloads"] if b["id"] != id]
+    save_db(db_data)
+    return {"success": True}
+
+# Contact Messages
+@app.get("/api/messages")
+def get_contact_messages():
+    db_data = load_db()
+    return db_data.get("contactMessages", [])
+
+@app.post("/api/messages")
+def add_contact_message(payload: MessageInput):
+    db_data = load_db()
+    new_msg = payload.dict()
+    new_msg["id"] = f"msg_{int(datetime.datetime.utcnow().timestamp())}_{len(db_data['contactMessages'])}"
+    new_msg["status"] = "NEW"
+    new_msg["createdAt"] = datetime.datetime.utcnow().isoformat() + "Z"
+    db_data["contactMessages"].append(new_msg)
+    save_db(db_data)
+    return new_msg
+
+@app.put("/api/messages/{id}")
+def update_contact_message(id: str, updates: Dict, user: str = Depends(verify_token)):
+    db_data = load_db()
+    for msg in db_data["contactMessages"]:
+        if msg["id"] == id:
+            msg.update(updates)
+            save_db(db_data)
+            return msg
+    raise HTTPException(status_code=404, detail="Message not found")
+
+@app.delete("/api/messages/{id}")
+def delete_contact_message(id: str, user: str = Depends(verify_token)):
+    db_data = load_db()
+    db_data["contactMessages"] = [m for m in db_data["contactMessages"] if m["id"] != id]
+    save_db(db_data)
+    return {"success": True}
+
+# Speakers
+@app.get("/api/speakers")
+def get_speakers():
+    db_data = load_db()
+    return db_data.get("speakers", [])
+
+@app.post("/api/speakers")
+def save_speaker(payload: Dict, user: str = Depends(verify_token)):
+    db_data = load_db()
+    sp_id = payload.get("id")
+    if "order" in payload:
+        payload["order"] = int(payload["order"])
+    if sp_id:
+        for sp in db_data["speakers"]:
+            if sp["id"] == sp_id:
+                sp.update(payload)
+                save_db(db_data)
+                return sp
+    new_sp = payload.copy()
+    new_sp["id"] = f"sp_{int(datetime.datetime.utcnow().timestamp())}"
+    new_sp["createdAt"] = datetime.datetime.utcnow().isoformat() + "Z"
+    db_data["speakers"].append(new_sp)
+    save_db(db_data)
+    return new_sp
+
+@app.delete("/api/speakers/{id}")
+def delete_speaker(id: str, user: str = Depends(verify_token)):
+    db_data = load_db()
+    db_data["speakers"] = [s for s in db_data["speakers"] if s["id"] != id]
+    save_db(db_data)
+    return {"success": True}
+
+# Agenda
+@app.get("/api/agenda")
+def get_agenda():
+    db_data = load_db()
+    return db_data.get("agenda", [])
+
+@app.post("/api/agenda")
+def save_agenda_item(payload: Dict, user: str = Depends(verify_token)):
+    db_data = load_db()
+    ag_id = payload.get("id")
+    if "day" in payload:
+        payload["day"] = int(payload["day"])
+    if "order" in payload:
+        payload["order"] = int(payload["order"])
+    if ag_id:
+        for ag in db_data["agenda"]:
+            if ag["id"] == ag_id:
+                ag.update(payload)
+                save_db(db_data)
+                return ag
+    new_ag = payload.copy()
+    new_ag["id"] = f"ag_{int(datetime.datetime.utcnow().timestamp())}"
+    new_ag["createdAt"] = datetime.datetime.utcnow().isoformat() + "Z"
+    db_data["agenda"].append(new_ag)
+    save_db(db_data)
+    return new_ag
+
+@app.delete("/api/agenda/{id}")
+def delete_agenda_item(id: str, user: str = Depends(verify_token)):
+    db_data = load_db()
+    db_data["agenda"] = [a for a in db_data["agenda"] if a["id"] != id]
+    save_db(db_data)
+    return {"success": True}
+
+# FAQs
+@app.get("/api/faqs")
+def get_faqs():
+    db_data = load_db()
+    return db_data.get("faqs", [])
+
+@app.post("/api/faqs")
+def save_faq_item(payload: Dict, user: str = Depends(verify_token)):
+    db_data = load_db()
+    faq_id = payload.get("id")
+    if "order" in payload:
+        payload["order"] = int(payload["order"])
+    if faq_id:
+        for faq in db_data["faqs"]:
+            if faq["id"] == faq_id:
+                faq.update(payload)
+                save_db(db_data)
+                return faq
+    new_faq = payload.copy()
+    new_faq["id"] = f"faq_{int(datetime.datetime.utcnow().timestamp())}"
+    new_faq["createdAt"] = datetime.datetime.utcnow().isoformat() + "Z"
+    db_data["faqs"].append(new_faq)
+    save_db(db_data)
+    return new_faq
+
+@app.delete("/api/faqs/{id}")
+def delete_faq_item(id: str, user: str = Depends(verify_token)):
+    db_data = load_db()
+    db_data["faqs"] = [f for f in db_data["faqs"] if f["id"] != id]
+    save_db(db_data)
+    return {"success": True}
+
+# Sponsors
+@app.get("/api/sponsors")
+def get_sponsors():
+    db_data = load_db()
+    return db_data.get("sponsors", [])
+
+@app.post("/api/sponsors")
+def save_sponsor_item(payload: Dict, user: str = Depends(verify_token)):
+    db_data = load_db()
+    spn_id = payload.get("id")
+    if "order" in payload:
+        payload["order"] = int(payload["order"])
+    if spn_id:
+        for spn in db_data["sponsors"]:
+            if spn["id"] == spn_id:
+                spn.update(payload)
+                save_db(db_data)
+                return spn
+    new_spn = payload.copy()
+    new_spn["id"] = f"spn_{int(datetime.datetime.utcnow().timestamp())}"
+    new_spn["createdAt"] = datetime.datetime.utcnow().isoformat() + "Z"
+    db_data["sponsors"].append(new_spn)
+    save_db(db_data)
+    return new_spn
+
+@app.delete("/api/sponsors/{id}")
+def delete_sponsor_item(id: str, user: str = Depends(verify_token)):
+    db_data = load_db()
+    db_data["sponsors"] = [s for s in db_data["sponsors"] if s["id"] != id]
+    save_db(db_data)
+    return {"success": True}
+
+# Gallery
+@app.get("/api/gallery")
+def get_gallery():
+    db_data = load_db()
+    return db_data.get("gallery", [])
+
+@app.post("/api/gallery")
+def save_gallery_item(payload: Dict, user: str = Depends(verify_token)):
+    db_data = load_db()
+    gal_id = payload.get("id")
+    if gal_id:
+        for gal in db_data["gallery"]:
+            if gal["id"] == gal_id:
+                gal.update(payload)
+                save_db(db_data)
+                return gal
+    new_gal = payload.copy()
+    new_gal["id"] = f"gal_{int(datetime.datetime.utcnow().timestamp())}"
+    new_gal["createdAt"] = datetime.datetime.utcnow().isoformat() + "Z"
+    db_data["gallery"].append(new_gal)
+    save_db(db_data)
+    return new_gal
+
+@app.delete("/api/gallery/{id}")
+def delete_gallery_item(id: str, user: str = Depends(verify_token)):
+    db_data = load_db()
+    db_data["gallery"] = [g for g in db_data["gallery"] if g["id"] != id]
+    save_db(db_data)
+    return {"success": True}
+
+# Settings
+@app.get("/api/settings")
+def get_settings():
+    db_data = load_db()
+    return db_data.get("settings", [])
+
+@app.post("/api/settings")
+def save_setting(payload: Dict, user: str = Depends(verify_token)):
+    db_data = load_db()
+    key = payload.get("key")
+    val = payload.get("value")
+    if not key:
+         raise HTTPException(status_code=400, detail="Missing key in setting payload")
+    
+    # Check if exists
+    found = False
+    for setting in db_data["settings"]:
+        if setting["key"] == key:
+            setting["value"] = val
+            found = True
+            break
+    if not found:
+        db_data["settings"].append({"key": key, "value": val})
+    
+    save_db(db_data)
+    return {"key": key, "value": val}
+
+
+# Reports Export
+
 @app.post("/api/reports/registrations/excel")
 def export_registrations_excel(payload: ExportDataRequest, user: str = Depends(verify_token)):
     if not payload.data:
@@ -113,7 +800,6 @@ def export_registrations_excel(payload: ExportDataRequest, user: str = Depends(v
         
     df = pd.DataFrame(payload.data)
     
-    # Select and order columns for display
     cols_map = {
         "id": "Registration ID",
         "name": "Full Name",
@@ -127,7 +813,6 @@ def export_registrations_excel(payload: ExportDataRequest, user: str = Depends(v
         "createdAt": "Registered At"
     }
     
-    # Filter only keys that exist in the dataframe
     df = df[[col for col in cols_map.keys() if col in df.columns]]
     df.rename(columns=cols_map, inplace=True)
     
@@ -157,7 +842,6 @@ def export_registrations_pdf(payload: ExportDataRequest, user: str = Depends(ver
     styles = getSampleStyleSheet()
     story = []
 
-    # Custom Header Style
     title_style = ParagraphStyle(
         'PDFTitle',
         parent=styles['Heading1'],
@@ -170,7 +854,6 @@ def export_registrations_pdf(payload: ExportDataRequest, user: str = Depends(ver
     story.append(Paragraph("Global Nursing Conference 2027 - Registrations Report", title_style))
     story.append(Spacer(1, 10))
 
-    # Construct Grid Table Data
     table_data = [["Name", "Email", "Phone", "Country", "Package", "Amount", "Method", "Status"]]
     for item in payload.data:
         table_data.append([
@@ -184,7 +867,6 @@ def export_registrations_pdf(payload: ExportDataRequest, user: str = Depends(ver
             str(item.get("status", ""))
         ])
 
-    # Table Layout Styling
     t = Table(table_data, colWidths=[100, 140, 90, 80, 80, 60, 80, 70])
     t.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0c1a30')),
@@ -271,10 +953,8 @@ def export_abstracts_pdf(payload: ExportDataRequest, user: str = Depends(verify_
     story.append(Paragraph("Global Nursing Conference 2027 - Abstract Submissions", title_style))
     story.append(Spacer(1, 10))
 
-    # Construct Grid Table Data
     table_data = [["Presenter", "Email", "Phone", "Profession", "Country", "Paper Title", "Status"]]
     for item in payload.data:
-        # Wrap paper title to prevent text clipping
         title_para = Paragraph(str(item.get("title", "")), styles['BodyText'])
         table_data.append([
             f"{item.get('prefix', '')} {item.get('name', '')}",
@@ -309,3 +989,4 @@ def export_abstracts_pdf(payload: ExportDataRequest, user: str = Depends(verify_
         media_type="application/pdf",
         headers={"Content-Disposition": "attachment; filename=gnc2027_abstracts.pdf"}
     )
+

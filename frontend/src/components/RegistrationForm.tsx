@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Card, Text, Button, Group, SimpleGrid, TextInput, Select, Textarea, Stack, Paper, Title, Box } from '@mantine/core';
+import { Card, Text, Button, Group, SimpleGrid, TextInput, Select, Textarea, Stack, Paper, Title, Box, useMantineColorScheme } from '@mantine/core';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -22,6 +22,7 @@ const registrationSchema = z.object({
 type RegistrationFormData = z.infer<typeof registrationSchema>;
 
 export default function RegistrationForm() {
+  const { colorScheme } = useMantineColorScheme();
   const [selectedPackage, setSelectedPackage] = useState<'STUDENT' | 'ONE_DAY' | 'PLAN_A' | 'PLAN_B' | null>(null);
   const formRef = useRef<HTMLDivElement | null>(null);
 
@@ -207,7 +208,7 @@ export default function RegistrationForm() {
                 </Text>
                 
                 <Group align="flex-end" gap={4} style={{ margin: '10px 0' }}>
-                  <Text style={{ fontSize: '2.25rem', fontWeight: 800, color: 'var(--color-navy-blue)', lineHeight: 1 }}>
+                  <Text style={{ fontSize: '2.25rem', fontWeight: 800, color: colorScheme === 'dark' ? '#ffffff' : 'var(--color-navy-blue)', lineHeight: 1 }}>
                     {pkg.price}
                   </Text>
                   <Text size="xs" c="dimmed" fw={600} style={{ paddingBottom: '4px' }}>
@@ -274,7 +275,7 @@ export default function RegistrationForm() {
 
                 <form onSubmit={handleSubmit(onSubmit)}>
                   <Stack gap="sm">
-                    <Group grow>
+                    <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
                       <TextInput
                         label="Full Name"
                         placeholder="Dr. Alexander Rossi"
@@ -290,9 +291,9 @@ export default function RegistrationForm() {
                         error={errors.country?.message}
                         {...register('country')}
                       />
-                    </Group>
+                    </SimpleGrid>
 
-                    <Group grow>
+                    <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
                       <TextInput
                         label="Email Address"
                         placeholder="a.rossi@nursing-assoc.it"
@@ -309,9 +310,9 @@ export default function RegistrationForm() {
                         error={errors.phone?.message}
                         {...register('phone')}
                       />
-                    </Group>
+                    </SimpleGrid>
 
-                    <Group grow>
+                    <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
                       <Controller
                         name="package"
                         control={control}
@@ -354,7 +355,7 @@ export default function RegistrationForm() {
                           />
                         )}
                       />
-                    </Group>
+                    </SimpleGrid>
 
                     <Textarea
                       label="Additional Requirements / Dietary / Comments"

@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useMantineColorScheme } from '@mantine/core';
+import { db } from './services/db';
 import Home from './pages/Home';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
@@ -17,8 +18,11 @@ function App() {
   const { toggleColorScheme } = useMantineColorScheme();
 
   useEffect(() => {
+    // 1. Sync IndexedDB reactive cache from Python REST API backend
+    db.syncFromApi();
+
+    // 2. Toggle theme on Ctrl + J (case-insensitive)
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Toggle theme on Ctrl + J (case-insensitive)
       if (event.ctrlKey && event.key.toLowerCase() === 'j') {
         event.preventDefault();
         toggleColorScheme();
