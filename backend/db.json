@@ -14,8 +14,33 @@
       "createdAt": "2026-07-19T07:30:51.113321Z"
     }
   ],
-  "abstracts": [],
-  "brochureDownloads": [],
+  "abstracts": [
+    {
+      "prefix": "Dr.",
+      "name": "JAYAVARDHAN REDDY D",
+      "email": "sanatanavarasatvaam@gmail.com",
+      "phone": "+919440791722",
+      "profession": "developer",
+      "country": "India",
+      "title": "teestnggg",
+      "fileName": "GNC-2027-Abstract-Sample-Template (2).docx",
+      "filePath": "uploads/1785322370_GNC-2027-Abstract-Sample-Template (2).docx",
+      "id": "abs_1785322370_0",
+      "status": "PENDING",
+      "createdAt": "2026-07-29T16:22:50.338160Z"
+    }
+  ],
+  "brochureDownloads": [
+    {
+      "name": "JAYAVARDHAN REDDY D",
+      "email": "sanatanavarasatvaam@gmail.com",
+      "phone": "+919440791722",
+      "country": "India",
+      "query": "",
+      "id": "lead_1785322333_0",
+      "createdAt": "2026-07-29T16:22:13.039605Z"
+    }
+  ],
   "contactMessages": [],
   "speakers": [
     {
@@ -333,7 +358,7 @@
     },
     {
       "key": "support_email",
-      "value": "contact@nursingconference.net"
+      "value": "nursing@syntrophyglobalconferences.com"
     },
     {
       "key": "support_phone",

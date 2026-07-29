@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Container, Group, Button, Drawer, Burger, ActionIcon, useMantineColorScheme } from '@mantine/core';
+import { Container, Group, Button, Drawer, Burger, ActionIcon, useMantineColorScheme, Stack } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { IconSun, IconMoon } from '@tabler/icons-react';
 
@@ -12,6 +12,7 @@ export default function Header({ onOpenBrochure, onOpenAbstract }: HeaderProps) 
   const [opened, { toggle, close }] = useDisclosure(false);
   const [scrolled, setScrolled] = useState(false);
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -23,6 +24,15 @@ export default function Header({ onOpenBrochure, onOpenAbstract }: HeaderProps) 
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const handleNavClick = (selector: string) => {
@@ -60,7 +70,7 @@ export default function Header({ onOpenBrochure, onOpenAbstract }: HeaderProps) 
         left: 0,
         right: 0,
         zIndex: 100,
-        height: '60px',
+        height: isMobile ? '96px' : '60px',
         display: 'flex',
         alignItems: 'center',
         transition: 'all 0.3s ease',
@@ -74,64 +84,171 @@ export default function Header({ onOpenBrochure, onOpenAbstract }: HeaderProps) 
       }}
     >
       <Container size="xl" style={{ width: '100%' }}>
-        <Group justify="space-between" align="center">
-          {/* Logo */}
-          <Group gap="xs" style={{ cursor: 'pointer' }} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <img 
-              src={colorScheme === 'dark' ? '/logo_dark.png' : '/logo_light.png'} 
-              alt="Syntrophy Global Health Logo" 
-              style={{ height: '48px', objectFit: 'contain' }} 
-            />
-          </Group>
+        {isMobile ? (
+          <Stack gap="xs" style={{ width: '100%' }}>
+            {/* Row 1: Logo and theme toggle + burger */}
+            <Group justify="space-between" align="center" style={{ height: '48px', width: '100%' }}>
+              <Group gap="xs" style={{ cursor: 'pointer' }} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+                <img 
+                  src={colorScheme === 'dark' ? '/logo_dark.png' : '/logo_light.png'} 
+                  alt="Syntrophy Global Health Logo" 
+                  style={{ height: '36px', objectFit: 'contain' }} 
+                />
+              </Group>
 
-          {/* Desktop Navigation Links */}
-          <Group gap="xl" visibleFrom="xl">
-            {navItems.map((item) => (
+              <Group gap="xs">
+                <ActionIcon
+                  variant="subtle"
+                  onClick={() => toggleColorScheme()}
+                  size="md"
+                  radius="md"
+                  color={colorScheme === 'dark' ? 'yellow' : 'blue'}
+                >
+                  {colorScheme === 'dark' ? <IconSun size={18} /> : <IconMoon size={18} />}
+                </ActionIcon>
+
+                <Burger opened={opened} onClick={toggle} size="sm" color={colorScheme === 'dark' ? '#fff' : '#0c1a30'} />
+              </Group>
+            </Group>
+
+            {/* Row 2: Brochure, Abstract, Register */}
+            <Group grow gap="xs" style={{ height: '34px', width: '100%' }}>
               <Button
-                key={item.label}
-                variant="transparent"
-                onClick={item.action}
-                className="header-nav-btn"
+                variant="outline"
+                color="emerald.6"
+                onClick={onOpenBrochure}
+                size="xs"
                 style={{
                   fontWeight: 600,
-                  fontSize: '14px',
-                  fontFamily: 'var(--font-sans)',
-                  padding: '0 8px'
+                  height: '30px',
+                  fontSize: '11px',
+                  padding: '0 4px'
                 }}
               >
-                {item.label}
+                Brochure
               </Button>
-            ))}
+
+              <Button
+                variant="outline"
+                color="medical.6"
+                onClick={onOpenAbstract}
+                size="xs"
+                style={{
+                  fontWeight: 600,
+                  height: '30px',
+                  fontSize: '11px',
+                  padding: '0 4px'
+                }}
+              >
+                Abstract
+              </Button>
+
+              <Button
+                variant="gradient"
+                gradient={{ from: 'medical.5', to: 'emerald.5' }}
+                onClick={() => handleNavClick('#registration')}
+                size="xs"
+                style={{
+                  fontWeight: 600,
+                  height: '30px',
+                  fontSize: '11px',
+                  padding: '0 4px'
+                }}
+              >
+                Register
+              </Button>
+            </Group>
+          </Stack>
+        ) : (
+          <Group justify="space-between" align="center">
+            {/* Logo */}
+            <Group gap="xs" style={{ cursor: 'pointer' }} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+              <img 
+                src={colorScheme === 'dark' ? '/logo_dark.png' : '/logo_light.png'} 
+                alt="Syntrophy Global Health Logo" 
+                style={{ height: '48px', objectFit: 'contain' }} 
+              />
+            </Group>
+
+            {/* Desktop Navigation Links */}
+            <Group gap="xl" visibleFrom="xl">
+              {navItems.map((item) => (
+                <Button
+                  key={item.label}
+                  variant="transparent"
+                  onClick={item.action}
+                  className="header-nav-btn"
+                  style={{
+                    fontWeight: 600,
+                    fontSize: '14px',
+                    fontFamily: 'var(--font-sans)',
+                    padding: '0 8px'
+                  }}
+                >
+                  {item.label}
+                </Button>
+              ))}
+            </Group>
+
+            {/* Action buttons (Theme, Brochure, Abstract, and Register) */}
+            <Group gap="sm">
+              <ActionIcon
+                variant="subtle"
+                onClick={() => toggleColorScheme()}
+                size="lg"
+                radius="md"
+                color={colorScheme === 'dark' ? 'yellow' : 'blue'}
+              >
+                {colorScheme === 'dark' ? <IconSun size={20} /> : <IconMoon size={20} />}
+              </ActionIcon>
+
+              {/* Brochure Buttons */}
+              <Button
+                visibleFrom="sm"
+                hiddenFrom="xl"
+                variant="outline"
+                color="emerald.6"
+                onClick={onOpenBrochure}
+                size="xs"
+                style={{
+                  fontWeight: 600
+                }}
+              >
+                Download Brochure
+              </Button>
+
+              {/* Abstract Buttons */}
+              <Button
+                visibleFrom="sm"
+                hiddenFrom="xl"
+                variant="outline"
+                color="medical.6"
+                onClick={onOpenAbstract}
+                size="xs"
+                style={{
+                  fontWeight: 600
+                }}
+              >
+                Submit Abstract
+              </Button>
+
+              <Button
+                visibleFrom="sm"
+                variant="gradient"
+                gradient={{ from: 'medical.5', to: 'emerald.5' }}
+                onClick={() => handleNavClick('#registration')}
+                style={{
+                  boxShadow: '0 4px 14px rgba(0, 119, 255, 0.3)',
+                  fontWeight: 600
+                }}
+              >
+                Register Now
+              </Button>
+
+              <Burger opened={opened} onClick={toggle} hiddenFrom="xl" size="sm" color={colorScheme === 'dark' ? '#fff' : '#0c1a30'} />
+            </Group>
           </Group>
-
-          {/* Action buttons (Theme and Register) */}
-          <Group gap="md">
-            <ActionIcon
-              variant="subtle"
-              onClick={() => toggleColorScheme()}
-              size="lg"
-              radius="md"
-              color={colorScheme === 'dark' ? 'yellow' : 'blue'}
-            >
-              {colorScheme === 'dark' ? <IconSun size={20} /> : <IconMoon size={20} />}
-            </ActionIcon>
-
-            <Button
-              visibleFrom="sm"
-              variant="gradient"
-              gradient={{ from: 'medical.5', to: 'emerald.5' }}
-              onClick={() => handleNavClick('#registration')}
-              style={{
-                boxShadow: '0 4px 14px rgba(0, 119, 255, 0.3)',
-                fontWeight: 600
-              }}
-            >
-              Register Now
-            </Button>
-
-            <Burger opened={opened} onClick={toggle} hiddenFrom="xl" size="sm" color={colorScheme === 'dark' ? '#fff' : '#0c1a30'} />
-          </Group>
-        </Group>
+        )}
       </Container>
 
       {/* Mobile Navigation Drawer */}
@@ -171,6 +288,32 @@ export default function Header({ onOpenBrochure, onOpenAbstract }: HeaderProps) 
             </Button>
           ))}
           <Button
+            variant="outline"
+            color="emerald.6"
+            fullWidth
+            onClick={() => {
+              close();
+              onOpenBrochure();
+            }}
+            style={{ height: '45px', marginTop: '10px', fontWeight: 600 }}
+          >
+            Download Brochure
+          </Button>
+
+          <Button
+            variant="outline"
+            color="medical.6"
+            fullWidth
+            onClick={() => {
+              close();
+              onOpenAbstract();
+            }}
+            style={{ height: '45px', marginTop: '5px', fontWeight: 600 }}
+          >
+            Submit Abstract
+          </Button>
+
+          <Button
             variant="gradient"
             gradient={{ from: 'medical.5', to: 'emerald.5' }}
             fullWidth
@@ -178,7 +321,7 @@ export default function Header({ onOpenBrochure, onOpenAbstract }: HeaderProps) 
               close();
               handleNavClick('#registration');
             }}
-            style={{ height: '45px', marginTop: '10px' }}
+            style={{ height: '45px', marginTop: '5px' }}
           >
             Register Now
           </Button>

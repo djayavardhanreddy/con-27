@@ -2,14 +2,37 @@ import os
 import jwt
 import datetime
 import json
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from email import encoders
 from typing import List, Optional, Dict
-from fastapi import FastAPI, HTTPException, UploadFile, File, Depends, Header
+from fastapi import FastAPI, HTTPException, UploadFile, File, Depends, Header, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, EmailStr
 import pandas as pd
 import io
+
+# Load .env variables manually if not already set
+def load_dotenv_file(filepath=".env"):
+    if os.path.exists(filepath):
+        with open(filepath, "r") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                if "=" in line:
+                    key, val = line.split("=", 1)
+                    key = key.strip()
+                    val = val.strip().strip('"').strip("'")
+                    os.environ[key] = val
+
+# Try loading from standard paths
+load_dotenv_file(".env")
+load_dotenv_file("backend/.env")
 
 # ReportLab imports for PDF generation
 from reportlab.lib.pagesizes import letter, landscape
@@ -22,6 +45,18 @@ JWT_SECRET = os.getenv("JWT_SECRET", "supersecretjwttokenkey987654321!")
 JWT_ALGORITHM = "HS256"
 ADMIN_EMAIL = "admin@con27.org"
 ADMIN_PASSWORD = "password123"
+
+# SMTP Configuration
+SMTP_HOST = os.getenv("SMTP_HOST", "")
+try:
+    SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+except ValueError:
+    SMTP_PORT = 587
+SMTP_USERNAME = os.getenv("SMTP_USERNAME", "")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
+SMTP_FROM_EMAIL = os.getenv("SMTP_FROM_EMAIL", "nursing@syntrophyglobalconferences.com")
+SMTP_FROM_NAME = os.getenv("SMTP_FROM_NAME", "Syntrophy Conferences")
+ADMIN_NOTIFICATION_EMAIL = os.getenv("ADMIN_NOTIFICATION_EMAIL", "nursing@syntrophyglobalconferences.com")
 
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -337,7 +372,7 @@ DEFAULT_SETTINGS = [
     { "key": "conference_theme", "value": "Nex-Gen Nursing: Trends, Techs, Triumphs in Global Health" },
     { "key": "conference_dates", "value": "May 13-14, 2027" },
     { "key": "conference_venue", "value": "To be announced, Rome, Italy" },
-    { "key": "support_email", "value": "contact@nursingconference.net" },
+    { "key": "support_email", "value": "nursing@syntrophyglobalconferences.com" },
     { "key": "support_phone", "value": "+39 06 1234567" }
 ]
 
@@ -394,7 +429,133 @@ class MessageInput(BaseModel):
     email: str
     phone: Optional[str] = None
     subject: Optional[str] = None
-    message: str
+
+
+def send_email_smtp(to_email: str, subject: str, body: str, attachment_path: Optional[str] = None, attachment_name: Optional[str] = None):
+    if not SMTP_HOST or not SMTP_USERNAME:
+        print(f"\n--- [MOCK EMAIL] ---")
+        print(f"SMTP is not configured in environment (missing SMTP_HOST or SMTP_USERNAME).")
+        print(f"Would send email to: {to_email}")
+        print(f"Subject: {subject}")
+        print(f"Body:\n{body}")
+        if attachment_path:
+            print(f"Attachment: {attachment_path} (Name: {attachment_name})")
+        print(f"--------------------\n")
+        return
+
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = f"{SMTP_FROM_NAME} <{SMTP_FROM_EMAIL}>"
+        msg['To'] = to_email
+        msg['Subject'] = subject
+        
+        msg.attach(MIMEText(body, 'plain', 'utf-8'))
+        
+        if attachment_path and os.path.exists(attachment_path):
+            try:
+                with open(attachment_path, 'rb') as f:
+                    part = MIMEBase('application', 'octet-stream')
+                    part.set_payload(f.read())
+                encoders.encode_base64(part)
+                name = attachment_name or os.path.basename(attachment_path)
+                part.add_header(
+                    'Content-Disposition',
+                    f'attachment; filename="{name}"'
+                )
+                msg.attach(part)
+            except Exception as e:
+                print(f"Error attaching file {attachment_path} to email: {e}")
+
+        # Send email
+        if SMTP_PORT == 465:
+            server = smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=10)
+        else:
+            server = smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10)
+            server.ehlo()
+            try:
+                server.starttls()
+                server.ehlo()
+            except Exception as tls_err:
+                print(f"STARTTLS failed or skipped: {tls_err}")
+        
+        if SMTP_PASSWORD:
+            server.login(SMTP_USERNAME, SMTP_PASSWORD)
+            
+        server.sendmail(SMTP_FROM_EMAIL, to_email, msg.as_string())
+        server.quit()
+        print(f"Successfully sent email to {to_email} with subject: {subject}")
+    except Exception as e:
+        print(f"Error sending email to {to_email}: {e}")
+
+def send_brochure_emails(payload: BrochureInput, created_at: str):
+    # 1. Email to us (admin notification)
+    admin_subject = "New Brochure Download for Nursing 2027, Rome, Italy"
+    admin_body = (
+        f"A new brochure download request has been registered.\n\n"
+        f"Complete Form Details:\n"
+        f"Name: {payload.name}\n"
+        f"Email: {payload.email}\n"
+        f"Phone: {payload.phone}\n"
+        f"Country: {payload.country}\n"
+        f"Special Queries / Comments: {payload.query or 'None'}\n"
+        f"Submitted At: {created_at}\n"
+    )
+    send_email_smtp(ADMIN_NOTIFICATION_EMAIL, admin_subject, admin_body)
+    
+    # 2. Email to client (thank you email)
+    client_subject = "Thank you for interest in Syntrophy Nursing Conference 2027, Rome, Italy"
+    client_body = (
+        f"Dear {payload.name},\n"
+        f"Thank you for your interest in our Syntrophy Global Nursing Conference 2027 May 13-14, 2027 Rome, Italy.\n"
+        f"If you need any assistance please free to revert to this email.\n\n"
+        f"Regards,\n"
+        f"Scientific committee\n"
+        f"Syntrophy Conferences.\n"
+        f"nursing@syntrophyglobalconferences.com\n"
+    )
+    send_email_smtp(payload.email, client_subject, client_body)
+
+def send_abstract_emails(payload: AbstractInput, created_at: str):
+    # 1. Email to us (admin notification)
+    admin_subject = "New Abstract Submitted to Nursing 2027 Rome, Italy"
+    admin_body = (
+        f"A new research abstract has been submitted.\n\n"
+        f"Complete Filled Form Details:\n"
+        f"Prefix: {payload.prefix}\n"
+        f"Name: {payload.name}\n"
+        f"Email: {payload.email}\n"
+        f"Phone: {payload.phone}\n"
+        f"Profession: {payload.profession}\n"
+        f"Country: {payload.country}\n"
+        f"Abstract Title: {payload.title}\n"
+        f"File Name: {payload.fileName}\n"
+        f"Submitted At: {created_at}\n"
+    )
+    
+    file_path = payload.filePath
+    if not os.path.exists(file_path):
+        base_name = os.path.basename(payload.filePath)
+        file_path = os.path.join(UPLOAD_DIR, base_name)
+        
+    send_email_smtp(
+        to_email=ADMIN_NOTIFICATION_EMAIL,
+        subject=admin_subject,
+        body=admin_body,
+        attachment_path=file_path if os.path.exists(file_path) else None,
+        attachment_name=payload.fileName
+    )
+    
+    # 2. Email to client
+    client_subject = "Abstract Submitted to Syntrophy Nursing Conferences 2027, Rome, Italy."
+    salutation = f"{payload.prefix} {payload.name}" if payload.prefix else payload.name
+    client_body = (
+        f"Dear {salutation},\n"
+        f"Thank you for your interest and submitting abstract for Global Nursing conference 2027, Rome, Italy. We will be reviewing the abstract and will get back to you. \n"
+        f"Please revert back to this email if you need any assistance or if you have any queries.\n\n"
+        f"Regards,\n"
+        f"Syntrophy Conferences.\n"
+    )
+    send_email_smtp(payload.email, client_subject, client_body)
 
 # Helper to read/write JSON file DB
 def load_db() -> Dict:
@@ -500,7 +661,7 @@ def get_abstracts():
     return db_data.get("abstracts", [])
 
 @app.post("/api/abstracts")
-def add_abstract(payload: AbstractInput):
+def add_abstract(payload: AbstractInput, background_tasks: BackgroundTasks):
     db_data = load_db()
     new_abs = payload.dict()
     new_abs["id"] = f"abs_{int(datetime.datetime.utcnow().timestamp())}_{len(db_data['abstracts'])}"
@@ -508,6 +669,10 @@ def add_abstract(payload: AbstractInput):
     new_abs["createdAt"] = datetime.datetime.utcnow().isoformat() + "Z"
     db_data["abstracts"].append(new_abs)
     save_db(db_data)
+    
+    # Send email in background
+    background_tasks.add_task(send_abstract_emails, payload, new_abs["createdAt"])
+    
     return new_abs
 
 @app.put("/api/abstracts/{id}")
@@ -553,13 +718,17 @@ def get_brochure_leads():
     return db_data.get("brochureDownloads", [])
 
 @app.post("/api/brochures")
-def add_brochure_lead(payload: BrochureInput):
+def add_brochure_lead(payload: BrochureInput, background_tasks: BackgroundTasks):
     db_data = load_db()
     new_lead = payload.dict()
     new_lead["id"] = f"lead_{int(datetime.datetime.utcnow().timestamp())}_{len(db_data['brochureDownloads'])}"
     new_lead["createdAt"] = datetime.datetime.utcnow().isoformat() + "Z"
     db_data["brochureDownloads"].append(new_lead)
     save_db(db_data)
+    
+    # Send email in background
+    background_tasks.add_task(send_brochure_emails, payload, new_lead["createdAt"])
+    
     return new_lead
 
 @app.delete("/api/brochures/{id}")

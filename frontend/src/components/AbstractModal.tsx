@@ -16,7 +16,8 @@ const abstractSchema = z.object({
   phone: z.string().min(5, 'Phone number must be at least 5 digits'),
   profession: z.string().min(2, 'Profession must be specified'),
   country: z.string().min(2, 'Country must be specified'),
-  title: z.string().min(5, 'Title must be at least 5 characters')
+  title: z.string().min(5, 'Title must be at least 5 characters'),
+  topicsDiscussed: z.string().min(1, 'Please select a topic discussed')
 });
 
 type AbstractFormData = z.infer<typeof abstractSchema>;
@@ -47,7 +48,8 @@ export default function AbstractModal({ opened, onClose }: AbstractModalProps) {
       phone: '',
       profession: '',
       country: '',
-      title: ''
+      title: '',
+      topicsDiscussed: ''
     }
   });
 
@@ -265,6 +267,35 @@ export default function AbstractModal({ opened, onClose }: AbstractModalProps) {
             required
             error={errors.title?.message}
             {...register('title')}
+          />
+
+          <Controller
+            name="topicsDiscussed"
+            control={control}
+            render={({ field }) => (
+              <Select
+                label="Topics Discussed"
+                placeholder="Select topic"
+                data={[
+                  'The Internet of Medical Things (IoMT)',
+                  'Cybersecurity & data privacy in Nursing',
+                  'Nursing Education and Learning',
+                  'Mental Health & Well-being of Nurses',
+                  'Advanced Practices & Expanded Roles',
+                  'Green Nursing & Sustainability',
+                  'Cultural competency & Trauma-Informed care',
+                  'Disaster Response & Global Health security',
+                  'Maternal & Child Health Milestones',
+                  'Nurses Policy & Advocacy',
+                  'Role of AI In Healthcare',
+                  'Scaling of Local innovations in Nursing',
+                  'Nursing-Led primary care'
+                ]}
+                error={errors.topicsDiscussed?.message}
+                required
+                {...field}
+              />
+            )}
           />
 
           {/* Drag & Drop Area */}
