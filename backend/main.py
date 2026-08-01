@@ -15,6 +15,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, EmailStr
 import pandas as pd
 import io
+from a2wsgi import ASGIMiddleware
 
 # Load .env variables manually if not already set
 def load_dotenv_file(filepath=".env"):
@@ -387,6 +388,9 @@ app.add_middleware(
 )
 
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
+
+# Wrap the app for GoDaddy cPanel compatibility (Passenger WSGI entry point)
+wsgi_app = ASGIMiddleware(app)
 
 # --- SCHEMAS ---
 class LoginRequest(BaseModel):
