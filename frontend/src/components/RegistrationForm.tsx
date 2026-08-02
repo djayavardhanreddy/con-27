@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Card, Text, Button, Group, SimpleGrid, TextInput, Select, Textarea, Stack, Paper, Title, Box, useMantineColorScheme, SegmentedControl } from '@mantine/core';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -26,6 +26,23 @@ export default function RegistrationForm() {
   const [selectedPackage, setSelectedPackage] = useState<'STUDENT' | 'ONE_DAY' | 'PLAN_A' | 'PLAN_B' | null>(null);
   const [currency, setCurrency] = useState<'USD' | 'EUR'>('USD');
   const formRef = useRef<HTMLDivElement | null>(null);
+
+  // CAPTCHA spam protection state variables
+  const [captchaNum1, setCaptchaNum1] = useState<number>(0);
+  const [captchaNum2, setCaptchaNum2] = useState<number>(0);
+  const [captchaAnswer, setCaptchaAnswer] = useState<string>('');
+  const [captchaError, setCaptchaError] = useState<string>('');
+
+  const generateCaptcha = () => {
+    setCaptchaNum1(Math.floor(Math.random() * 9) + 1);
+    setCaptchaNum2(Math.floor(Math.random() * 9) + 1);
+    setCaptchaAnswer('');
+    setCaptchaError('');
+  };
+
+  useEffect(() => {
+    generateCaptcha();
+  }, []);
 
   const {
     register,
@@ -80,6 +97,7 @@ export default function RegistrationForm() {
       });
       reset();
       setSelectedPackage(null);
+      generateCaptcha();
     },
     onError: () => {
       notifications.show({
@@ -101,6 +119,11 @@ export default function RegistrationForm() {
   };
 
   const onSubmit = (data: RegistrationFormData) => {
+    const correctAnswer = captchaNum1 + captchaNum2;
+    if (parseInt(captchaAnswer) !== correctAnswer) {
+      setCaptchaError('Incorrect captcha answer. Please try again.');
+      return;
+    }
     registrationMutation.mutate(data);
   };
 
@@ -121,7 +144,7 @@ export default function RegistrationForm() {
     {
       id: 'ONE_DAY',
       name: 'One Day Registration',
-      price: currency === 'USD' ? '$449' : '€229',
+      price: currency === 'USD' ? '$449' : '€389',
       popular: false,
       features: [
         'Access to one day sessions',
@@ -355,7 +378,7 @@ export default function RegistrationForm() {
                             placeholder="Select package..."
                             data={[
                               { value: 'STUDENT', label: `Student Registration - ${currency === 'USD' ? '$399' : '€369'}` },
-                              { value: 'ONE_DAY', label: `One Day Registration - ${currency === 'USD' ? '$449' : '€229'}` },
+                              { value: 'ONE_DAY', label: `One Day Registration - ${currency === 'USD' ? '$449' : '€389'}` },
                               { value: 'PLAN_A', label: `Package Plan A - ${currency === 'USD' ? '$999' : '€929'}` },
                               { value: 'PLAN_B', label: `Package Plan B - ${currency === 'USD' ? '$849' : '€789'}` }
                             ]}
@@ -397,6 +420,29 @@ export default function RegistrationForm() {
                       error={errors.comments?.message}
                       {...register('comments')}
                     />
+
+                    <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md" style={{ marginTop: '10px', alignItems: 'flex-end' }}>
+                      <TextInput
+                        label={`Spam Protection: What is ${captchaNum1} + ${captchaNum2}?`}
+                        placeholder="Enter sum..."
+                        required
+                        value={captchaAnswer}
+                        onChange={(e) => {
+                          setCaptchaAnswer(e.target.value);
+                          setCaptchaError('');
+                        }}
+                        error={captchaError}
+                      />
+                      <Button
+                        variant="subtle"
+                        color="blue"
+                        size="sm"
+                        onClick={generateCaptcha}
+                        style={{ width: 'fit-content', height: '36px', marginBottom: '4px' }}
+                      >
+                        Refresh Captcha
+                      </Button>
+                    </SimpleGrid>
 
                     <Group gap="xs" style={{ background: 'rgba(255, 145, 0, 0.08)', border: '1px dashed orange', padding: '12px', borderRadius: '8px', marginTop: '5px' }}>
                       <IconBrandPaypal size={22} color="orange" />
