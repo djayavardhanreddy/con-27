@@ -1,11 +1,11 @@
-import { Modal, TextInput, Textarea, Button, Stack, Text, Alert } from '@mantine/core';
+import { Modal, TextInput, Textarea, Button, Stack, Text } from '@mantine/core';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
 import { notifications } from '@mantine/notifications';
 import { db } from '../services/db';
-import { IconCheck, IconInfoCircle } from '@tabler/icons-react';
+import { IconCheck } from '@tabler/icons-react';
 
 const brochureSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -139,9 +139,6 @@ export default function BrochureModal({ opened, onClose }: BrochureModalProps) {
             {...register('query')}
           />
 
-          <Alert variant="light" color="blue" icon={<IconInfoCircle size={16} />} style={{ marginTop: '5px' }}>
-            A copy of the brochure will also be sent to your email.
-          </Alert>
 
           <Button
             type="submit"
