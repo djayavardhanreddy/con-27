@@ -166,23 +166,6 @@ export default function Hero({ onOpenBrochure, onOpenAbstract }: HeroProps) {
               <Group gap="md" justify="center" style={{ flexWrap: 'wrap' }}>
                 <Button
                   size="lg"
-                  variant="gradient"
-                  gradient={{ from: 'medical.5', to: 'emerald.5' }}
-                  rightSection={<IconArrowRight size={18} />}
-                  onClick={handleRegisterScroll}
-                  style={{
-                    boxShadow: '0 4px 20px rgba(0, 119, 255, 0.4)',
-                    height: '54px',
-                    fontWeight: 700,
-                    borderRadius: '30px',
-                    padding: '0 30px'
-                  }}
-                >
-                  Register Now
-                </Button>
-
-                <Button
-                  size="lg"
                   variant="outline"
                   color="blue"
                   leftSection={<IconDownload size={18} />}
@@ -221,6 +204,23 @@ export default function Hero({ onOpenBrochure, onOpenAbstract }: HeroProps) {
                   }}
                 >
                   Submit Abstract
+                </Button>
+
+                <Button
+                  size="lg"
+                  variant="gradient"
+                  gradient={{ from: 'medical.5', to: 'emerald.5' }}
+                  rightSection={<IconArrowRight size={18} />}
+                  onClick={handleRegisterScroll}
+                  style={{
+                    boxShadow: '0 4px 20px rgba(0, 119, 255, 0.4)',
+                    height: '54px',
+                    fontWeight: 700,
+                    borderRadius: '30px',
+                    padding: '0 30px'
+                  }}
+                >
+                  Register Now
                 </Button>
               </Group>
             </motion.div>
