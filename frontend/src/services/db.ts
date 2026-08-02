@@ -9,6 +9,7 @@ export interface Registration {
   country: string;
   package: string;
   amount: number;
+  currency?: 'USD' | 'EUR';
   status: 'PENDING' | 'PAID' | 'CANCELLED';
   paymentMethod: 'PAYPAL' | 'STRIPE' | 'BANK_TRANSFER';
   comments?: string;

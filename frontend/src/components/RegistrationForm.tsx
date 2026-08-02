@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Card, Text, Button, Group, SimpleGrid, TextInput, Select, Textarea, Stack, Paper, Title, Box, useMantineColorScheme } from '@mantine/core';
+import { Card, Text, Button, Group, SimpleGrid, TextInput, Select, Textarea, Stack, Paper, Title, Box, useMantineColorScheme, SegmentedControl } from '@mantine/core';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -24,6 +24,7 @@ type RegistrationFormData = z.infer<typeof registrationSchema>;
 export default function RegistrationForm() {
   const { colorScheme } = useMantineColorScheme();
   const [selectedPackage, setSelectedPackage] = useState<'STUDENT' | 'ONE_DAY' | 'PLAN_A' | 'PLAN_B' | null>(null);
+  const [currency, setCurrency] = useState<'USD' | 'EUR'>('USD');
   const formRef = useRef<HTMLDivElement | null>(null);
 
   const {
@@ -49,10 +50,10 @@ export default function RegistrationForm() {
   const registrationMutation = useMutation({
     mutationFn: async (data: RegistrationFormData) => {
       let amount = 0;
-      if (data.package === 'STUDENT') amount = 399;
-      else if (data.package === 'ONE_DAY') amount = 249;
-      else if (data.package === 'PLAN_A') amount = 999;
-      else if (data.package === 'PLAN_B') amount = 849;
+      if (data.package === 'STUDENT') amount = currency === 'USD' ? 399 : 369;
+      else if (data.package === 'ONE_DAY') amount = currency === 'USD' ? 249 : 229;
+      else if (data.package === 'PLAN_A') amount = currency === 'USD' ? 999 : 929;
+      else if (data.package === 'PLAN_B') amount = currency === 'USD' ? 849 : 789;
 
       if (data.paymentMethod === 'PAYPAL') {
         amount = Number((amount * 1.02).toFixed(2));
@@ -62,6 +63,7 @@ export default function RegistrationForm() {
         id: crypto.randomUUID(),
         ...data,
         amount,
+        currency,
         status: 'PENDING' as const,
         createdAt: new Date().toISOString()
       };
@@ -106,7 +108,7 @@ export default function RegistrationForm() {
     {
       id: 'STUDENT',
       name: 'Student Registration',
-      price: '$399',
+      price: currency === 'USD' ? '$399' : '€369',
       popular: false,
       features: [
         'Access to all technical sessions',
@@ -119,7 +121,7 @@ export default function RegistrationForm() {
     {
       id: 'ONE_DAY',
       name: 'One Day Registration',
-      price: '$249',
+      price: currency === 'USD' ? '$249' : '€229',
       popular: false,
       features: [
         'Access to one day sessions',
@@ -132,7 +134,7 @@ export default function RegistrationForm() {
     {
       id: 'PLAN_A',
       name: 'Package Plan A',
-      price: '$999',
+      price: currency === 'USD' ? '$999' : '€929',
       popular: true,
       features: [
         '3 Nights of luxury accommodation',
@@ -145,7 +147,7 @@ export default function RegistrationForm() {
     {
       id: 'PLAN_B',
       name: 'Package Plan B',
-      price: '$849',
+      price: currency === 'USD' ? '$849' : '€789',
       popular: false,
       features: [
         '3 Nights of budget accommodation',
@@ -159,6 +161,28 @@ export default function RegistrationForm() {
 
   return (
     <Stack gap="xl" style={{ width: '100%' }}>
+      {/* Currency Switcher */}
+      <Group justify="center" gap="sm" style={{ marginBottom: '10px' }}>
+        <Text fw={600} size="sm" c="dimmed">
+          Select Currency:
+        </Text>
+        <SegmentedControl
+          value={currency}
+          onChange={(val) => setCurrency(val as 'USD' | 'EUR')}
+          data={[
+            { label: 'USD ($)', value: 'USD' },
+            { label: 'EUR (€)', value: 'EUR' }
+          ]}
+          color="medical.5"
+          radius="xl"
+          size="sm"
+          style={{
+            boxShadow: 'var(--glass-shadow)',
+            border: '1px solid var(--glass-border)'
+          }}
+        />
+      </Group>
+
       {/* Pricing Cards Grid */}
       <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="lg">
         {packages.map((pkg) => (
@@ -212,7 +236,7 @@ export default function RegistrationForm() {
                     {pkg.price}
                   </Text>
                   <Text size="xs" c="dimmed" fw={600} style={{ paddingBottom: '4px' }}>
-                    USD
+                    {currency}
                   </Text>
                 </Group>
 
@@ -321,10 +345,10 @@ export default function RegistrationForm() {
                             label="Selected Package Plan"
                             placeholder="Select package..."
                             data={[
-                              { value: 'STUDENT', label: 'Student Registration - $399' },
-                              { value: 'ONE_DAY', label: 'One Day Registration - $249' },
-                              { value: 'PLAN_A', label: 'Package Plan A - $999' },
-                              { value: 'PLAN_B', label: 'Package Plan B - $849' }
+                              { value: 'STUDENT', label: `Student Registration - ${currency === 'USD' ? '$399' : '€369'}` },
+                              { value: 'ONE_DAY', label: `One Day Registration - ${currency === 'USD' ? '$249' : '€229'}` },
+                              { value: 'PLAN_A', label: `Package Plan A - ${currency === 'USD' ? '$999' : '€929'}` },
+                              { value: 'PLAN_B', label: `Package Plan B - ${currency === 'USD' ? '$849' : '€789'}` }
                             ]}
                             error={errors.package?.message}
                             required

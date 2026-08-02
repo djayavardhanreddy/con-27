@@ -427,6 +427,7 @@ class RegistrationInput(BaseModel):
     package: str
     amount: float
     paymentMethod: str
+    currency: Optional[str] = "USD"
     comments: Optional[str] = None
 
 class AbstractInput(BaseModel):
