@@ -150,7 +150,7 @@ export default function RegistrationForm() {
       price: currency === 'USD' ? '$849' : '€789',
       popular: false,
       features: [
-        '3 Nights of budget accommodation',
+        '2 Nights of budget accommodation',
         '2 Lunches at conference venue',
         'Access to all conference sessions',
         'Conference proceedings & abstracts booklet',
