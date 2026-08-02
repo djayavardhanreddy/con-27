@@ -206,15 +206,18 @@ export default function Hero({ onOpenBrochure, onOpenAbstract }: HeroProps) {
 
                 <Button
                   size="lg"
-                  variant="subtle"
+                  variant="outline"
+                  color="emerald.6"
                   leftSection={<IconFileText size={18} />}
                   onClick={onOpenAbstract}
                   style={{
                     height: '54px',
                     fontWeight: 700,
-                    color: '#10b981',
                     borderRadius: '30px',
-                    padding: '0 30px'
+                    padding: '0 30px',
+                    borderColor: 'rgba(16, 185, 129, 0.4)',
+                    color: '#10b981',
+                    backgroundColor: colorScheme === 'dark' ? 'rgba(16, 185, 129, 0.05)' : 'rgba(16, 185, 129, 0.02)',
                   }}
                 >
                   Submit Abstract
