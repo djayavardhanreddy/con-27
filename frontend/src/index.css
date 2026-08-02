@@ -155,3 +155,30 @@ html[data-mantine-color-scheme="dark"] .header-nav-btn {
 html[data-mantine-color-scheme="dark"] .header-nav-btn:hover {
   color: var(--color-medical-blue) !important;
 }
+
+/* Pricing card package select button custom hover styles */
+.select-package-btn {
+  border-width: 2px !important;
+  border-color: var(--color-medical-blue) !important;
+  color: var(--color-medical-blue) !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+.select-package-btn:hover {
+  background-color: var(--color-medical-blue) !important;
+  color: #ffffff !important;
+  border-color: var(--color-medical-blue) !important;
+  transform: scale(1.02);
+}
+
+.select-package-btn.selected {
+  background-color: var(--color-emerald-green) !important;
+  border-color: var(--color-emerald-green) !important;
+  color: #ffffff !important;
+}
+
+.select-package-btn.selected:hover {
+  background-color: #0d9488 !important; /* darker emerald green */
+  border-color: #0d9488 !important;
+  transform: scale(1.02);
+}

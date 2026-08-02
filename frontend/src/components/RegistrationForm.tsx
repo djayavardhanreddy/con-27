@@ -93,7 +93,7 @@ export default function RegistrationForm() {
   const handleSelectPackage = (pkg: 'STUDENT' | 'ONE_DAY' | 'PLAN_A' | 'PLAN_B') => {
     setSelectedPackage(pkg);
     setValue('package', pkg);
-    
+
     // Smooth scroll to the form
     setTimeout(() => {
       formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -235,7 +235,7 @@ export default function RegistrationForm() {
                 <Text fw={700} size="lg" style={{ fontFamily: 'var(--font-title)' }}>
                   {pkg.name}
                 </Text>
-                
+
                 <Group align="flex-end" gap={4} style={{ margin: '10px 0' }}>
                   <Text style={{ fontSize: '2.25rem', fontWeight: 800, color: colorScheme === 'dark' ? '#ffffff' : 'var(--color-navy-blue)', lineHeight: 1 }}>
                     {pkg.price}
@@ -260,16 +260,12 @@ export default function RegistrationForm() {
               <Button
                 onClick={() => handleSelectPackage(pkg.id as any)}
                 variant={selectedPackage === pkg.id ? 'filled' : 'outline'}
-                color={selectedPackage === pkg.id ? 'emerald.6' : 'medical.5'}
+                className={`select-package-btn ${selectedPackage === pkg.id ? 'selected' : ''}`}
                 fullWidth
                 style={{
                   marginTop: '24px',
                   height: '42px',
-                  fontWeight: 700,
-                  transition: 'all 0.2s ease',
-                  borderWidth: '2px',
-                  borderColor: selectedPackage === pkg.id ? '' : 'var(--color-medical-blue)',
-                  color: selectedPackage === pkg.id ? '#ffffff' : 'var(--color-medical-blue)'
+                  fontWeight: 700
                 }}
               >
                 {selectedPackage === pkg.id ? 'Selected ✓' : 'Select Package'}
@@ -303,7 +299,7 @@ export default function RegistrationForm() {
               <Stack gap="md">
                 <Box style={{ borderBottom: '1px solid var(--glass-border)', paddingBottom: '12px' }}>
                   <Title order={3} style={{ fontFamily: 'var(--font-title)', fontSize: '20px' }}>
-                    Delegate Registration Form
+                    Registration Form
                   </Title>
                   <Text size="xs" c="dimmed">
                     Complete the details below to finalize your booking for the selected package.
@@ -320,7 +316,7 @@ export default function RegistrationForm() {
                         error={errors.name?.message}
                         {...register('name')}
                       />
-                      
+
                       <TextInput
                         label="Country"
                         placeholder="Italy"
@@ -339,7 +335,7 @@ export default function RegistrationForm() {
                         error={errors.email?.message}
                         {...register('email')}
                       />
-                      
+
                       <TextInput
                         label="Phone Number"
                         placeholder="+39 06 987654"
