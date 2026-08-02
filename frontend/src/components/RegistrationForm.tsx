@@ -200,7 +200,12 @@ export default function RegistrationForm() {
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
-                border: pkg.popular ? '2px solid var(--color-medical-blue)' : '1px solid var(--glass-border)',
+                border: selectedPackage === pkg.id
+                  ? '2px solid #10b981'
+                  : (pkg.popular ? '2px solid var(--color-medical-blue)' : '1px solid var(--glass-border)'),
+                boxShadow: selectedPackage === pkg.id
+                  ? '0 0 15px rgba(16, 185, 129, 0.25)'
+                  : 'var(--glass-shadow)',
                 background: 'var(--glass-bg)',
                 backdropFilter: 'blur(8px)',
                 position: 'relative'
@@ -255,11 +260,19 @@ export default function RegistrationForm() {
               <Button
                 onClick={() => handleSelectPackage(pkg.id as any)}
                 variant={selectedPackage === pkg.id ? 'filled' : 'outline'}
-                color={selectedPackage === pkg.id ? 'blue' : 'gray'}
+                color={selectedPackage === pkg.id ? 'emerald.6' : 'medical.5'}
                 fullWidth
-                style={{ marginTop: '24px', height: '42px', fontWeight: 700 }}
+                style={{
+                  marginTop: '24px',
+                  height: '42px',
+                  fontWeight: 700,
+                  transition: 'all 0.2s ease',
+                  borderWidth: '2px',
+                  borderColor: selectedPackage === pkg.id ? '' : 'var(--color-medical-blue)',
+                  color: selectedPackage === pkg.id ? '#ffffff' : 'var(--color-medical-blue)'
+                }}
               >
-                Select Package
+                {selectedPackage === pkg.id ? 'Selected ✓' : 'Select Package'}
               </Button>
             </Card>
           </motion.div>
