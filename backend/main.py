@@ -11,7 +11,7 @@ from typing import List, Optional, Dict
 from fastapi import FastAPI, HTTPException, UploadFile, File, Depends, Header, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, FileResponse
 from pydantic import BaseModel, EmailStr
 import pandas as pd
 import io
@@ -392,6 +392,25 @@ app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 # Wrap the app for GoDaddy cPanel compatibility (Passenger WSGI entry point)
 wsgi_app = ASGIMiddleware(app)
 
+@app.get("/{catchall:path}")
+async def serve_frontend(catchall: str):
+    # Exclude API paths from serving index.html
+    if catchall.startswith("api"):
+        raise HTTPException(status_code=404, detail="API endpoint not found")
+        
+    import os
+    # Serve static assets/files from dist folder if they exist
+    file_path = os.path.join("dist", catchall)
+    if os.path.exists(file_path) and os.path.isfile(file_path):
+        return FileResponse(file_path)
+        
+    # Default to index.html for Single Page App routing
+    index_path = os.path.join("dist", "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+        
+    return {"message": "Welcome to Syntrophy Global Health Conference API. Frontend dist not found."}
+
 # --- SCHEMAS ---
 class LoginRequest(BaseModel):
     email: EmailStr
@@ -436,7 +455,19 @@ class MessageInput(BaseModel):
 
 
 def send_email_smtp(to_email: str, subject: str, body: str, attachment_path: Optional[str] = None, attachment_name: Optional[str] = None):
-    if not SMTP_HOST or not SMTP_USERNAME:
+    # Fetch SMTP variables dynamically from environment for cPanel compatibility
+    host = os.getenv("SMTP_HOST", "")
+    username = os.getenv("SMTP_USERNAME", "")
+    password = os.getenv("SMTP_PASSWORD", "")
+    from_email = os.getenv("SMTP_FROM_EMAIL", "nursing@syntrophyglobalconferences.com")
+    from_name = os.getenv("SMTP_FROM_NAME", "Syntrophy Conferences")
+    
+    try:
+        port = int(os.getenv("SMTP_PORT", "587"))
+    except ValueError:
+        port = 587
+
+    if not host or not username:
         print(f"\n--- [MOCK EMAIL] ---")
         print(f"SMTP is not configured in environment (missing SMTP_HOST or SMTP_USERNAME).")
         print(f"Would send email to: {to_email}")
@@ -449,7 +480,7 @@ def send_email_smtp(to_email: str, subject: str, body: str, attachment_path: Opt
 
     try:
         msg = MIMEMultipart()
-        msg['From'] = f"{SMTP_FROM_NAME} <{SMTP_FROM_EMAIL}>"
+        msg['From'] = f"{from_name} <{from_email}>"
         msg['To'] = to_email
         msg['Subject'] = subject
         
@@ -471,10 +502,10 @@ def send_email_smtp(to_email: str, subject: str, body: str, attachment_path: Opt
                 print(f"Error attaching file {attachment_path} to email: {e}")
 
         # Send email
-        if SMTP_PORT == 465:
-            server = smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=10)
+        if port == 465:
+            server = smtplib.SMTP_SSL(host, port, timeout=10)
         else:
-            server = smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10)
+            server = smtplib.SMTP(host, port, timeout=10)
             server.ehlo()
             try:
                 server.starttls()
@@ -482,16 +513,33 @@ def send_email_smtp(to_email: str, subject: str, body: str, attachment_path: Opt
             except Exception as tls_err:
                 print(f"STARTTLS failed or skipped: {tls_err}")
         
-        if SMTP_PASSWORD:
-            server.login(SMTP_USERNAME, SMTP_PASSWORD)
+        if password:
+            server.login(username, password)
             
-        server.sendmail(SMTP_FROM_EMAIL, to_email, msg.as_string())
+        server.sendmail(from_email, to_email, msg.as_string())
         server.quit()
+        
+        # Log successful email send
+        with open("email_errors.log", "a") as log_file:
+            log_file.write(f"\n--- SUCCESS at {datetime.datetime.now()} ---\n")
+            log_file.write(f"To: {to_email} | Subject: {subject}\n")
+            log_file.write("---------------------------------------\n")
+            
         print(f"Successfully sent email to {to_email} with subject: {subject}")
     except Exception as e:
+        import traceback
+        # Log SMTP errors to a file for cPanel troubleshooting
+        with open("email_errors.log", "a") as log_file:
+            log_file.write(f"\n--- ERROR at {datetime.datetime.now()} ---\n")
+            log_file.write(f"To: {to_email}\n")
+            log_file.write(f"Error: {e}\n")
+            log_file.write(traceback.format_exc())
+            log_file.write("-------------------------------------\n")
         print(f"Error sending email to {to_email}: {e}")
 
 def send_brochure_emails(payload: BrochureInput, created_at: str):
+    admin_notification_email = os.getenv("ADMIN_NOTIFICATION_EMAIL", "nursing@syntrophyglobalconferences.com")
+    
     # 1. Email to us (admin notification)
     admin_subject = "New Brochure Download for Nursing 2027, Rome, Italy"
     admin_body = (
@@ -504,7 +552,7 @@ def send_brochure_emails(payload: BrochureInput, created_at: str):
         f"Special Queries / Comments: {payload.query or 'None'}\n"
         f"Submitted At: {created_at}\n"
     )
-    send_email_smtp(ADMIN_NOTIFICATION_EMAIL, admin_subject, admin_body)
+    send_email_smtp(admin_notification_email, admin_subject, admin_body)
     
     # 2. Email to client (thank you email)
     client_subject = "Thank you for interest in Syntrophy Nursing Conference 2027, Rome, Italy"
@@ -520,6 +568,8 @@ def send_brochure_emails(payload: BrochureInput, created_at: str):
     send_email_smtp(payload.email, client_subject, client_body)
 
 def send_abstract_emails(payload: AbstractInput, created_at: str):
+    admin_notification_email = os.getenv("ADMIN_NOTIFICATION_EMAIL", "nursing@syntrophyglobalconferences.com")
+
     # 1. Email to us (admin notification)
     admin_subject = "New Abstract Submitted to Nursing 2027 Rome, Italy"
     admin_body = (
@@ -542,7 +592,7 @@ def send_abstract_emails(payload: AbstractInput, created_at: str):
         file_path = os.path.join(UPLOAD_DIR, base_name)
         
     send_email_smtp(
-        to_email=ADMIN_NOTIFICATION_EMAIL,
+        to_email=admin_notification_email,
         subject=admin_subject,
         body=admin_body,
         attachment_path=file_path if os.path.exists(file_path) else None,
