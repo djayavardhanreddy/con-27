@@ -51,7 +51,7 @@ export default function RegistrationForm() {
     mutationFn: async (data: RegistrationFormData) => {
       let amount = 0;
       if (data.package === 'STUDENT') amount = currency === 'USD' ? 399 : 369;
-      else if (data.package === 'ONE_DAY') amount = currency === 'USD' ? 249 : 229;
+      else if (data.package === 'ONE_DAY') amount = currency === 'USD' ? 449 : 229;
       else if (data.package === 'PLAN_A') amount = currency === 'USD' ? 999 : 929;
       else if (data.package === 'PLAN_B') amount = currency === 'USD' ? 849 : 789;
 
@@ -121,7 +121,7 @@ export default function RegistrationForm() {
     {
       id: 'ONE_DAY',
       name: 'One Day Registration',
-      price: currency === 'USD' ? '$249' : '€229',
+      price: currency === 'USD' ? '$449' : '€229',
       popular: false,
       features: [
         'Access to one day sessions',
@@ -355,7 +355,7 @@ export default function RegistrationForm() {
                             placeholder="Select package..."
                             data={[
                               { value: 'STUDENT', label: `Student Registration - ${currency === 'USD' ? '$399' : '€369'}` },
-                              { value: 'ONE_DAY', label: `One Day Registration - ${currency === 'USD' ? '$249' : '€229'}` },
+                              { value: 'ONE_DAY', label: `One Day Registration - ${currency === 'USD' ? '$449' : '€229'}` },
                               { value: 'PLAN_A', label: `Package Plan A - ${currency === 'USD' ? '$999' : '€929'}` },
                               { value: 'PLAN_B', label: `Package Plan B - ${currency === 'USD' ? '$849' : '€789'}` }
                             ]}
