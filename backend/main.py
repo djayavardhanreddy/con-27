@@ -55,9 +55,9 @@ except ValueError:
     SMTP_PORT = 587
 SMTP_USERNAME = os.getenv("SMTP_USERNAME", "")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
-SMTP_FROM_EMAIL = os.getenv("SMTP_FROM_EMAIL", "nursing@syntrophyglobalconferences.com")
+SMTP_FROM_EMAIL = os.getenv("SMTP_FROM_EMAIL", "contact@syntrophyconferences.com")
 SMTP_FROM_NAME = os.getenv("SMTP_FROM_NAME", "Syntrophy Conferences")
-ADMIN_NOTIFICATION_EMAIL = os.getenv("ADMIN_NOTIFICATION_EMAIL", "nursing@syntrophyglobalconferences.com")
+ADMIN_NOTIFICATION_EMAIL = os.getenv("ADMIN_NOTIFICATION_EMAIL", "contact@syntrophyconferences.com")
 
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -373,7 +373,7 @@ DEFAULT_SETTINGS = [
     { "key": "conference_theme", "value": "Nex-Gen Nursing: Trends, Techs, Triumphs in Global Health" },
     { "key": "conference_dates", "value": "May 13-14, 2027" },
     { "key": "conference_venue", "value": "To be announced, Rome, Italy" },
-    { "key": "support_email", "value": "nursing@syntrophyglobalconferences.com" },
+    { "key": "support_email", "value": "contact@syntrophyconferences.com" },
     { "key": "support_phone", "value": "+39 06 1234567" }
 ]
 
@@ -457,20 +457,21 @@ class MessageInput(BaseModel):
 
 def send_email_smtp(to_email: str, subject: str, body: str, attachment_path: Optional[str] = None, attachment_name: Optional[str] = None):
     # Fetch SMTP variables dynamically from environment for cPanel compatibility
-    host = os.getenv("SMTP_HOST", "")
-    username = os.getenv("SMTP_USERNAME", "")
-    password = os.getenv("SMTP_PASSWORD", "")
-    from_email = os.getenv("SMTP_FROM_EMAIL", "nursing@syntrophyglobalconferences.com")
-    from_name = os.getenv("SMTP_FROM_NAME", "Syntrophy Conferences")
+    host = os.getenv("SMTP_HOST") or os.getenv("REDIRECT_SMTP_HOST", "")
+    username = os.getenv("SMTP_USERNAME") or os.getenv("REDIRECT_SMTP_USERNAME", "")
+    password = os.getenv("SMTP_PASSWORD") or os.getenv("REDIRECT_SMTP_PASSWORD", "")
+    from_email = os.getenv("SMTP_FROM_EMAIL") or os.getenv("REDIRECT_SMTP_FROM_EMAIL", "contact@syntrophyconferences.com")
+    from_name = os.getenv("SMTP_FROM_NAME") or os.getenv("REDIRECT_SMTP_FROM_NAME", "Syntrophy Conferences")
     
     try:
-        port = int(os.getenv("SMTP_PORT", "587"))
+        port_str = os.getenv("SMTP_PORT") or os.getenv("REDIRECT_SMTP_PORT", "587")
+        port = int(port_str)
     except ValueError:
         port = 587
 
-    if not host or not username:
+    if not host:
         print(f"\n--- [MOCK EMAIL] ---")
-        print(f"SMTP is not configured in environment (missing SMTP_HOST or SMTP_USERNAME).")
+        print(f"SMTP is not configured in environment (missing SMTP_HOST).")
         print(f"Would send email to: {to_email}")
         print(f"Subject: {subject}")
         print(f"Body:\n{body}")
@@ -539,7 +540,7 @@ def send_email_smtp(to_email: str, subject: str, body: str, attachment_path: Opt
         print(f"Error sending email to {to_email}: {e}")
 
 def send_brochure_emails(payload: BrochureInput, created_at: str):
-    admin_notification_email = os.getenv("ADMIN_NOTIFICATION_EMAIL", "nursing@syntrophyglobalconferences.com")
+    admin_notification_email = os.getenv("ADMIN_NOTIFICATION_EMAIL") or os.getenv("REDIRECT_ADMIN_NOTIFICATION_EMAIL", "contact@syntrophyconferences.com")
     
     # 1. Email to us (admin notification)
     admin_subject = "New Brochure Download for Nursing 2027, Rome, Italy"
@@ -564,12 +565,12 @@ def send_brochure_emails(payload: BrochureInput, created_at: str):
         f"Regards,\n"
         f"Scientific committee\n"
         f"Syntrophy Conferences.\n"
-        f"nursing@syntrophyglobalconferences.com\n"
+        f"contact@syntrophyconferences.com\n"
     )
     send_email_smtp(payload.email, client_subject, client_body)
 
 def send_abstract_emails(payload: AbstractInput, created_at: str):
-    admin_notification_email = os.getenv("ADMIN_NOTIFICATION_EMAIL", "nursing@syntrophyglobalconferences.com")
+    admin_notification_email = os.getenv("ADMIN_NOTIFICATION_EMAIL") or os.getenv("REDIRECT_ADMIN_NOTIFICATION_EMAIL", "contact@syntrophyconferences.com")
 
     # 1. Email to us (admin notification)
     admin_subject = "New Abstract Submitted to Nursing 2027 Rome, Italy"

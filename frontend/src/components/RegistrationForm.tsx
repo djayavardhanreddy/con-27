@@ -28,8 +28,8 @@ export default function RegistrationForm() {
   const formRef = useRef<HTMLDivElement | null>(null);
 
   // CAPTCHA spam protection state variables
-  const [captchaNum1, setCaptchaNum1] = useState<number>(0);
-  const [captchaNum2, setCaptchaNum2] = useState<number>(0);
+  const [captchaNum1, setCaptchaNum1] = useState<number>(() => Math.floor(Math.random() * 9) + 1);
+  const [captchaNum2, setCaptchaNum2] = useState<number>(() => Math.floor(Math.random() * 9) + 1);
   const [captchaAnswer, setCaptchaAnswer] = useState<string>('');
   const [captchaError, setCaptchaError] = useState<string>('');
 
@@ -111,6 +111,7 @@ export default function RegistrationForm() {
   const handleSelectPackage = (pkg: 'STUDENT' | 'ONE_DAY' | 'PLAN_A' | 'PLAN_B') => {
     setSelectedPackage(pkg);
     setValue('package', pkg);
+    generateCaptcha();
 
     // Smooth scroll to the form
     setTimeout(() => {

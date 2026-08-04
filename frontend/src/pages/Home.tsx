@@ -609,7 +609,7 @@ export default function Home() {
                   </div>
                   <div>
                     <Text size="xs" fw={700} c="dimmed" style={{ textTransform: 'uppercase' }}>Email Address</Text>
-                    <Text size="sm" fw={600} style={{ display: 'block' }}>nursing@syntrophyglobalconferences.com</Text>
+                    <Text size="sm" fw={600} style={{ display: 'block' }}>contact@syntrophyconferences.com</Text>
                     <Text size="sm" fw={600} style={{ display: 'block' }}>contact@nursingconference.net</Text>
                   </div>
                 </Group>

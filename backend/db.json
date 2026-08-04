@@ -98,6 +98,48 @@
       "id": "abs_1785629427_5",
       "status": "PENDING",
       "createdAt": "2026-08-02T05:40:27.676506Z"
+    },
+    {
+      "prefix": "Dr.",
+      "name": "JAYAVARDHAN REDDY D",
+      "email": "sanatanavarasatvaam@gmail.com",
+      "phone": "+919440791722",
+      "profession": "developer",
+      "country": "India",
+      "title": "TEsting",
+      "fileName": "GNC-2027-Conference-Brochure (9).pdf",
+      "filePath": "uploads/1785644213_GNC-2027-Conference-Brochure (9).pdf",
+      "id": "abs_1785644213_6",
+      "status": "PENDING",
+      "createdAt": "2026-08-02T09:46:53.615146Z"
+    },
+    {
+      "prefix": "Dr.",
+      "name": "JAYAVARDHAN REDDY D",
+      "email": "sanatanavarasatvaam@gmail.com",
+      "phone": "+919440791722",
+      "profession": "developer",
+      "country": "India",
+      "title": "sdfgjkl",
+      "fileName": "GNC-2027-Conference-Brochure (9).pdf",
+      "filePath": "uploads/1785645452_GNC-2027-Conference-Brochure (9).pdf",
+      "id": "abs_1785645452_7",
+      "status": "PENDING",
+      "createdAt": "2026-08-02T10:07:32.434359Z"
+    },
+    {
+      "prefix": "Dr.",
+      "name": "JAYAVARDHAN REDDY D",
+      "email": "sanatanavarasatvaam@gmail.com",
+      "phone": "+919440791722",
+      "profession": "developer",
+      "country": "India",
+      "title": "Testing",
+      "fileName": "GNC-2027-Conference-Brochure (9).pdf",
+      "filePath": "uploads/1785804184_GNC-2027-Conference-Brochure (9).pdf",
+      "id": "abs_1785804184_8",
+      "status": "PENDING",
+      "createdAt": "2026-08-04T06:13:04.554260Z"
     }
   ],
   "brochureDownloads": [
@@ -455,7 +497,7 @@
     },
     {
       "key": "support_email",
-      "value": "nursing@syntrophyglobalconferences.com"
+      "value": "contact@syntrophyconferences.com"
     },
     {
       "key": "support_phone",
