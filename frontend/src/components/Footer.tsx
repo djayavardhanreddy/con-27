@@ -98,7 +98,7 @@ export default function Footer({ onOpenBrochure, onOpenAbstract }: FooterProps =
             </Group>
             
             <Text size="sm" c="rgba(255,255,255,0.6)" style={{ lineHeight: 1.6 }}>
-              Global Nursing Conference 2027 – Nex-Gen Nursing: Trends, Techs, Triumphs in Global Health. Rome, Italy.
+              Global Nursing Conference 2027 – Nex-Gen Nursing: Trends, Techs, Triumphs in Global Health. Holiday Inn Rome - Eur Parco Dei Medici by IHG, Rome, Italy.
             </Text>
             
             <Group gap="sm">

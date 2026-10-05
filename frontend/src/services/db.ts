@@ -104,6 +104,7 @@ export interface GalleryItem {
   title?: string;
   imagePath: string;
   category: 'ROME' | 'CONFERENCE' | 'SOCIAL';
+  order?: number;
   createdAt: string;
 }
 
@@ -111,6 +112,27 @@ export interface Setting {
   key: string;
   value: string;
 }
+
+export const INITIAL_GALLERY_ITEMS: GalleryItem[] = [
+  { id: 'gal_dsc01302', title: 'Registration & Conference Materials', imagePath: '/gallery/dsc01302.jpg', category: 'CONFERENCE', order: 1, createdAt: '2026-09-24T09:42:21.000Z' },
+  { id: 'gal_dsc01355', title: 'Keynote Address on Healthcare Innovation', imagePath: '/gallery/dsc01355.jpg', category: 'CONFERENCE', order: 2, createdAt: '2026-09-24T09:42:32.000Z' },
+  { id: 'gal_dsc01367', title: 'Clinical Resilience & Patient Care Session', imagePath: '/gallery/dsc01367.jpg', category: 'CONFERENCE', order: 3, createdAt: '2026-09-24T09:42:38.000Z' },
+  { id: 'gal_dsc01371', title: 'Global Delegates Networking Discussion', imagePath: '/gallery/dsc01371.jpg', category: 'CONFERENCE', order: 4, createdAt: '2026-09-24T09:42:51.000Z' },
+  { id: 'gal_dsc01372', title: 'Executive Networking Luncheon', imagePath: '/gallery/dsc01372.jpg', category: 'CONFERENCE', order: 5, createdAt: '2026-09-24T09:43:03.000Z' },
+  { id: 'gal_dsc01375', title: 'International Faculty Round-Table Lunch', imagePath: '/gallery/dsc01375.jpg', category: 'CONFERENCE', order: 6, createdAt: '2026-09-24T09:43:15.000Z' },
+  { id: 'gal_dsc01398', title: 'Scientific Panel Moderation & Discussion', imagePath: '/gallery/dsc01398.jpg', category: 'CONFERENCE', order: 7, createdAt: '2026-09-24T09:43:26.000Z' },
+  { id: 'gal_dsc01404', title: 'Distinguished Speaker Oral Presentation', imagePath: '/gallery/dsc01404.jpg', category: 'CONFERENCE', order: 8, createdAt: '2026-09-24T09:43:32.000Z' },
+  { id: 'gal_dsc01443', title: 'Organizing Committee & Keynote Delegation', imagePath: '/gallery/dsc01443.jpg', category: 'CONFERENCE', order: 9, createdAt: '2026-09-24T09:43:40.000Z' },
+  { id: 'gal_dsc01445', title: 'International Conference Faculty & Speakers', imagePath: '/gallery/dsc01445.jpg', category: 'CONFERENCE', order: 10, createdAt: '2026-09-24T09:43:46.000Z' },
+  { id: 'gal_dsc01448', title: 'Advanced Surgical & Oncology Session', imagePath: '/gallery/dsc01448.jpg', category: 'CONFERENCE', order: 11, createdAt: '2026-09-24T09:43:54.000Z' },
+  { id: 'gal_dsc01454', title: 'Optical & Diagnostic Imaging Presentation', imagePath: '/gallery/dsc01454.jpg', category: 'CONFERENCE', order: 12, createdAt: '2026-09-24T09:44:01.000Z' },
+  { id: 'gal_dsc01466', title: 'Plenary Lecture by Prof. Masatoshi Tagawa', imagePath: '/gallery/dsc01466.jpg', category: 'CONFERENCE', order: 13, createdAt: '2026-09-24T09:44:06.000Z' },
+  { id: 'gal_dsc01476', title: 'Outstanding Poster Presentation Award', imagePath: '/gallery/dsc01476.jpg', category: 'CONFERENCE', order: 14, createdAt: '2026-09-24T09:44:23.000Z' },
+  { id: 'gal1', title: 'Colosseum, Rome', imagePath: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&q=80&w=800', category: 'ROME', order: 15, createdAt: '2026-07-19T07:30:35.014155Z' },
+  { id: 'gal2', title: 'Vatican City & St. Peter\'s', imagePath: 'https://images.unsplash.com/photo-1542820229-081e0c12af0b?auto=format&fit=crop&q=80&w=800', category: 'ROME', order: 16, createdAt: '2026-07-19T07:30:35.014165Z' },
+  { id: 'gal3', title: 'Trevi Fountain', imagePath: 'https://images.unsplash.com/photo-1531572753322-ad063cecc140?auto=format&fit=crop&q=80&w=800', category: 'ROME', order: 17, createdAt: '2026-07-19T07:30:35.014175Z' },
+  { id: 'gal7', title: 'The Pantheon, Rome', imagePath: 'https://images.unsplash.com/photo-1555992828-ca4dbe41d294?auto=format&fit=crop&q=80&w=800', category: 'ROME', order: 18, createdAt: '2026-07-19T07:30:35.014180Z' }
+];
 
 export class Con27Database extends Dexie {
   registrations!: Table<Registration, string>;
@@ -371,7 +393,7 @@ export class Con27Database extends Dexie {
         {
           id: 'faq1',
           question: 'When and where is the conference taking place?',
-          answer: 'The Global Nursing Conference 2027 will take place on May 13-14, 2027 in Rome, Italy. The specific venue hotel details will be updated on the website shortly.',
+          answer: 'The Global Nursing Conference 2027 will take place on May 13-14, 2027 at Holiday Inn Rome - Eur Parco Dei Medici by IHG (Viale Castello della Magliana, 65, 00148 Roma RM, Italy). Detailed maps, driving directions, and accommodation details are provided in the Conference Venue section.',
           order: 1,
           createdAt: new Date().toISOString()
         },
@@ -435,20 +457,15 @@ export class Con27Database extends Dexie {
         }
       ]);
 
-      this.gallery.bulkAdd([
-        { id: 'gal1', title: 'Colosseum, Rome', imagePath: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&q=80&w=600', category: 'ROME', createdAt: new Date().toISOString() },
-        { id: 'gal2', title: 'Vatican City', imagePath: 'https://images.unsplash.com/photo-1542820229-081e0c12af0b?auto=format&fit=crop&q=80&w=600', category: 'ROME', createdAt: new Date().toISOString() },
-        { id: 'gal3', title: 'Trevi Fountain', imagePath: 'https://images.unsplash.com/photo-1531572753322-ad063cecc140?auto=format&fit=crop&q=80&w=600', category: 'ROME', createdAt: new Date().toISOString() },
-        { id: 'gal4', title: 'Previous Conference Keynote', imagePath: 'https://images.unsplash.com/photo-1475721027785-f74eccf77e2?auto=format&fit=crop&q=80&w=600', category: 'CONFERENCE', createdAt: new Date().toISOString() },
-        { id: 'gal5', title: 'Panel Session Discussion', imagePath: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80&w=600', category: 'CONFERENCE', createdAt: new Date().toISOString() },
-        { id: 'gal6', title: 'Poster Session Networking', imagePath: 'https://images.unsplash.com/photo-1515187029135-18ee286d815b?auto=format&fit=crop&q=80&w=600', category: 'CONFERENCE', createdAt: new Date().toISOString() }
-      ]);
+      this.gallery.bulkAdd(INITIAL_GALLERY_ITEMS);
 
       this.settings.bulkAdd([
         { key: 'conference_title', value: 'Global Nursing Conference 2027' },
         { key: 'conference_theme', value: 'Nex-Gen Nursing: Trends, Techs, Triumphs in Global Health' },
         { key: 'conference_dates', value: 'May 13-14, 2027' },
-        { key: 'conference_venue', value: 'To be announced, Rome, Italy' },
+        { key: 'conference_venue', value: 'Holiday Inn Rome - Eur Parco Dei Medici by IHG, Viale Castello della Magliana, 65, 00148 Roma RM, Italy' },
+        { key: 'conference_venue_address', value: 'Viale Castello della Magliana, 65, 00148 Roma RM, Italy' },
+        { key: 'conference_venue_link', value: 'https://share.google/RXS2WVdiFVccyYdOU' },
         { key: 'support_email', value: 'contact@syntrophyconferences.com' },
         { key: 'support_phone', value: '+39 06 1234567' }
       ]);
@@ -541,6 +558,23 @@ export const db = {
         console.error(`Failed to sync table ${table.key} from API:`, err);
       }
     }
+
+    // Guarantee gallery items & hotel settings in local IndexedDB even if backend is offline
+    try {
+      const currentGallery = await dexieDb.gallery.toArray();
+      if (currentGallery.length === 0 || !currentGallery.some(g => g.id.startsWith('gal_dsc'))) {
+        await dexieDb.gallery.bulkPut(INITIAL_GALLERY_ITEMS);
+      }
+      const currentVenue = await dexieDb.settings.get('conference_venue');
+      if (!currentVenue || currentVenue.value.includes('To be announced')) {
+        await dexieDb.settings.put({ key: 'conference_venue', value: 'Holiday Inn Rome - Eur Parco Dei Medici by IHG, Viale Castello della Magliana, 65, 00148 Roma RM, Italy' });
+        await dexieDb.settings.put({ key: 'conference_venue_address', value: 'Viale Castello della Magliana, 65, 00148 Roma RM, Italy' });
+        await dexieDb.settings.put({ key: 'conference_venue_link', value: 'https://share.google/RXS2WVdiFVccyYdOU' });
+      }
+    } catch (e) {
+      console.warn("Could not ensure fallback gallery/settings in IndexedDB:", e);
+    }
+
     console.log("IndexedDB cache synchronization completed!");
   }
 };

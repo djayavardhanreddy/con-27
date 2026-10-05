@@ -1,8 +1,12 @@
 import sys
 import os
 
-# Add the current directory to python path
-sys.path.insert(0, os.path.dirname(__file__))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, BASE_DIR)
+try:
+    os.chdir(BASE_DIR)
+except Exception:
+    pass
 
 try:
     from main import wsgi_app as _wsgi_app
@@ -16,7 +20,8 @@ try:
 except Exception as e:
     import traceback
     # Write the error to a file in the app directory for easy debugging
-    with open("error.txt", "w") as f:
+    error_path = os.path.join(BASE_DIR, "error.txt")
+    with open(error_path, "w", encoding="utf-8") as f:
         f.write("Python Startup Error Traceback:\n")
         f.write(traceback.format_exc())
     raise e

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  Container, SimpleGrid, Title, Text, Button, Accordion, Stack, Paper, Group, TextInput, Textarea, Tabs, Box, Image, AspectRatio, Card, useMantineColorScheme
+  Container, SimpleGrid, Title, Text, Button, Accordion, Stack, Paper, Group, TextInput, Textarea, Tabs, Box, Image, AspectRatio, Card, Modal, Badge, useMantineColorScheme
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { useMutation } from '@tanstack/react-query';
@@ -11,7 +11,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from '../services/db';
+import { db, INITIAL_GALLERY_ITEMS } from '../services/db';
 
 import Header from '../components/Header';
 import Hero from '../components/Hero';
@@ -23,8 +23,10 @@ import AbstractModal from '../components/AbstractModal';
 import Footer from '../components/Footer';
 
 import {
-  IconShieldLock, IconSchool, IconBrain, IconUserCheck, IconLeaf, IconUsersGroup, IconAlertTriangle, IconFlame,
-  IconScale, IconCpu, IconBulb, IconFirstAidKit, IconCheck, IconMail, IconPhone, IconMapPin, IconActivity, IconCalendar
+  IconShieldLock, IconSchool, IconBrain, IconAlertTriangle,
+  IconCpu, IconBulb, IconCheck, IconMail, IconPhone, IconMapPin, IconActivity, IconClock,
+  IconStethoscope, IconBabyCarriage, IconDna, IconHeartHandshake, IconCertificate,
+  IconExternalLink
 } from '@tabler/icons-react';
 
 // Contact Form Schema
@@ -43,6 +45,7 @@ export default function Home() {
   const [brochureOpened, { open: openBrochure, close: closeBrochure }] = useDisclosure(false);
   const [abstractOpened, { open: openAbstract, close: closeAbstract }] = useDisclosure(false);
   const [galleryCategory, setGalleryCategory] = useState<string>('ALL');
+  const [selectedGalleryItem, setSelectedGalleryItem] = useState<any | null>(null);
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<ContactFormData>({
     resolver: zodResolver(contactSchema),
@@ -53,7 +56,10 @@ export default function Home() {
   const speakers = useLiveQuery(() => db.speakers.orderBy('order').toArray()) || [];
   const agenda = useLiveQuery(() => db.agenda.orderBy('order').toArray()) || [];
   const faqs = useLiveQuery(() => db.faqs.orderBy('order').toArray()) || [];
-  const gallery = useLiveQuery(() => db.gallery.toArray()) || [];
+  const liveGallery = useLiveQuery(() => db.gallery.toArray()) || [];
+  const gallery = liveGallery.some((item: any) => item.id.startsWith('gal_dsc'))
+    ? liveGallery
+    : INITIAL_GALLERY_ITEMS;
   const sponsors = useLiveQuery(() => db.sponsors.orderBy('order').toArray()) || [];
 
   const contactMutation = useMutation({
@@ -90,24 +96,85 @@ export default function Home() {
   };
 
   const topics = [
-    { title: 'The Internet of Medical Things (IoMT)', desc: 'Connecting remote sensors, smart beds, and patient wearables to standard clinical EHR flows.', icon: IconActivity },
-    { title: 'Cybersecurity & data privacy in Nursing', desc: 'Navigating patient confidentiality, clinical database safeguards, and network guidelines.', icon: IconShieldLock },
-    { title: 'Nursing Education and Learning', desc: 'Nex-Gen training methodologies, digital simulation tools, and pedagogical curriculums.', icon: IconSchool },
-    { title: 'Mental Health & Well-being of Nurses', desc: 'Solutions to clinical burnout, administrative networks, stress audits, and work-life balance.', icon: IconBrain },
-    { title: 'Advanced Practices & Expanded Roles', desc: 'Nursing leads, prescriptive authority, critical diagnosis, and independent community practitioners.', icon: IconUserCheck },
-    { title: 'Green Nursing & Sustainability', desc: 'Sustainable clinical recycling, clinical carbon reduction, and plastic elimination audits.', icon: IconLeaf },
-    { title: 'Cultural competency & Trauma-Informed care', desc: 'Interactions, clinical empathy models, and protective diagnostic environments.', icon: IconUsersGroup },
-    { title: 'Disaster Response & Global Health security', desc: 'Epidemiological monitoring, pandemic response plans, and humanitarian critical nursing.', icon: IconAlertTriangle },
-    { title: 'Maternal & Child Health Milestones', desc: 'Neonatal resuscitation, prenatal nursing, and maternal mortality protection policies.', icon: IconFlame },
-    { title: 'Nurses Policy & Advocacy', desc: 'Wage regulations, healthcare representation, staffing laws, and global nursing lobbies.', icon: IconScale },
-    { title: 'Role of AI In Healthcare', desc: 'AI diagnostics, prognostic modeling, nurse scheduling scripts, and automated chart parsing.', icon: IconCpu },
-    { title: 'Scaling of Local innovations in Nursing', desc: 'Taking regional nurse-led breakthroughs and exporting them to international healthcare platforms.', icon: IconBulb },
-    { title: 'Nursing-Led primary care', desc: 'Nurse practitioner clinics, rural healthcare deployment, and bedside preventive care.', icon: IconFirstAidKit }
+    {
+      title: 'Nursing Education, practice & Management',
+      desc: 'Curriculum transformation, digital clinical simulations, leadership models, and healthcare administration.',
+      icon: IconSchool
+    },
+    {
+      title: 'Innovations in Patient Care',
+      desc: 'Breakthrough care models, advanced patient-centric technologies, and enhanced clinical outcomes.',
+      icon: IconBulb
+    },
+    {
+      title: 'Acute / Critical Care Nursing',
+      desc: 'Intensive care protocols, emergency triage, hemodynamic monitoring, and acute patient stabilization.',
+      icon: IconActivity
+    },
+    {
+      title: 'Care of Patients with Chronic Disease',
+      desc: 'Long-term condition management, holistic patient rehabilitation, and palliative multidisciplinary strategies.',
+      icon: IconStethoscope
+    },
+    {
+      title: 'Crisis and Risk Management Primary Care Nursing',
+      desc: 'Preventive primary interventions, disaster response preparedness, and outpatient risk reduction.',
+      icon: IconAlertTriangle
+    },
+    {
+      title: 'Paediatric Nursing care & NICU',
+      desc: 'Specialized neonatal intensive care, developmental milestones, pediatric emergency protocols, and family support.',
+      icon: IconBabyCarriage
+    },
+    {
+      title: 'Oncology nursing',
+      desc: 'Comprehensive cancer therapies, precision symptom control, chemotherapy care, and patient survivorship.',
+      icon: IconDna
+    },
+    {
+      title: 'Ageing and Geriatric Nursing',
+      desc: 'Dementia care, mobility preservation, age-related multimorbidity, and compassionate elder care pathways.',
+      icon: IconHeartHandshake
+    },
+    {
+      title: 'Mental Health Nursing',
+      desc: 'Psychiatric nursing interventions, psychological resilience, trauma-informed care, and nurse well-being.',
+      icon: IconBrain
+    },
+    {
+      title: 'Types of Nursing & Training',
+      desc: 'Diverse nursing specializations, clinical skill acquisition, accreditation, and continuing professional training.',
+      icon: IconCertificate
+    },
+    {
+      title: 'Trends of AI in Healthcare and Nursing',
+      desc: 'Machine learning diagnostics, predictive patient analytics, robotic assistance, and smart workflows.',
+      icon: IconCpu
+    },
+    {
+      title: 'Nursing Ethics & Informatics',
+      desc: 'Ethical nursing frameworks, clinical informatics, EHR systems, and health data governance.',
+      icon: IconShieldLock
+    }
   ];
 
+  const sortedGallery = [...gallery].sort((a: any, b: any) => {
+    // Show Previous Conference photos ('CONFERENCE') first, then other photos ('ROME' / others)
+    const aIsConf = a.category === 'CONFERENCE';
+    const bIsConf = b.category === 'CONFERENCE';
+    if (aIsConf && !bIsConf) return -1;
+    if (!aIsConf && bIsConf) return 1;
+
+    if (a.order !== undefined && b.order !== undefined) {
+      return a.order - b.order;
+    }
+
+    return (a.id || '').localeCompare(b.id || '');
+  });
+
   const filteredGallery = galleryCategory === 'ALL'
-    ? gallery
-    : gallery.filter((item: any) => item.category === galleryCategory);
+    ? sortedGallery
+    : sortedGallery.filter((item: any) => item.category === galleryCategory);
 
   return (
     <div style={{ overflowX: 'hidden' }}>
@@ -121,7 +188,7 @@ export default function Home() {
       <Box component="section" id="about" style={{ padding: '80px 0', background: 'var(--color-light-gray)' }}>
         <Container size="xl">
           <SimpleGrid cols={{ base: 1, md: 2 }} spacing="xl">
-            <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
+            <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
               <div
                 style={{
                   background: 'rgba(0,119,255,0.08)',
@@ -142,7 +209,7 @@ export default function Home() {
                 Invitation to GNC 2027
               </Title>
               <Text style={{ lineHeight: 1.7, marginBottom: '15px' }} size="md" c="dimmed">
-                Syntrophy Conferences welcomes you to attend the <b>Nursing Conference 2027</b> during May 13-14, 2027 in Rome, Italy. We cordially invite all participants who are interested in sharing their knowledge and research in the arena of Nursing and Healthcare.
+                Syntrophy Conferences welcomes you to attend the <b>Nursing Conference 2027</b> during May 13-14, 2027 at <b>Holiday Inn Rome - Eur Parco Dei Medici by IHG</b> in Rome, Italy. We cordially invite all participants who are interested in sharing their knowledge and research in the arena of Nursing and Healthcare.
               </Text>
               <Text style={{ lineHeight: 1.7, marginBottom: '15px' }} size="md" c="dimmed">
                 This is an excellent opportunity for delegates from Universities and Institutes to interact with world-class Scientists, build strategic networks, and discover upcoming global tools and innovations.
@@ -162,9 +229,23 @@ export default function Home() {
                 <Group gap="xs" style={{ marginBottom: '6px' }}>
                   <Text size="sm">🎯 <b>Our Motto:</b> Making Knowledge accessible</Text>
                 </Group>
-                <Group gap="xs">
+                <Group gap="xs" style={{ marginBottom: '15px' }}>
                   <Text size="sm">🚀 <b>Our Mission:</b> To create a global platform for researchers to share and exchange their ideas.</Text>
                 </Group>
+                <div
+                  style={{
+                    background: colorScheme === 'dark' ? 'rgba(255, 145, 0, 0.08)' : 'rgba(255, 145, 0, 0.05)',
+                    border: '1px solid rgba(255, 145, 0, 0.2)',
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center'
+                  }}
+                >
+                  <Text size="sm" fw={700} style={{ color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    ⏰ Early bird registration closes October 31, 2026
+                  </Text>
+                </div>
               </Paper>
 
               <Button
@@ -178,7 +259,7 @@ export default function Home() {
               </Button>
             </motion.div>
 
-            <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
+            <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }}>
               <Stack gap="lg">
                 <Paper radius="lg" style={{ overflow: 'hidden', boxShadow: 'var(--glass-shadow)' }}>
                   <Image
@@ -188,26 +269,48 @@ export default function Home() {
                   />
                 </Paper>
 
-                {/* Important Dates widget */}
+                {/* Key Milestone Dates widget */}
                 <Paper p="lg" radius="lg" style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', boxShadow: 'var(--glass-shadow)' }}>
-                  <Group gap="sm" style={{ marginBottom: '15px' }}>
-                    <div style={{ background: 'rgba(0,119,255,0.1)', color: '#0077ff', borderRadius: '8px', padding: '6px', display: 'flex', alignItems: 'center' }}>
-                      <IconCalendar size={20} />
+                  <Group gap="sm" style={{ marginBottom: '20px' }}>
+                    <div style={{ background: 'rgba(0,119,255,0.1)', color: '#0077ff', borderRadius: '50%', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <IconClock size={20} />
                     </div>
-                    <Text fw={700} style={{ fontFamily: 'var(--font-title)', fontSize: '18px' }}>
-                      Important Dates
+                    <Text fw={700} style={{ fontFamily: 'var(--font-title)', fontSize: '18px', color: colorScheme === 'dark' ? '#ffffff' : 'var(--color-navy-blue)' }}>
+                      Key Milestone Dates
                     </Text>
                   </Group>
-                  <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-                    <Paper p="sm" radius="md" style={{ background: colorScheme === 'dark' ? 'rgba(0,119,255,0.08)' : 'rgba(0,119,255,0.05)', borderLeft: '4px solid #0077ff' }}>
-                      <Text size="xs" fw={700} c="dimmed" style={{ textTransform: 'uppercase', letterSpacing: '0.5px' }}>Abstract Submission</Text>
-                      <Text size="sm" fw={700} style={{ color: colorScheme === 'dark' ? '#ffffff' : 'var(--color-navy-blue)', marginTop: '4px' }}>August 5th, 2026</Text>
-                    </Paper>
-                    <Paper p="sm" radius="md" style={{ background: colorScheme === 'dark' ? 'rgba(16,185,129,0.08)' : 'rgba(16,185,129,0.05)', borderLeft: '4px solid #10b981' }}>
-                      <Text size="xs" fw={700} c="dimmed" style={{ textTransform: 'uppercase', letterSpacing: '0.5px' }}>Registration Starts</Text>
-                      <Text size="sm" fw={700} style={{ color: colorScheme === 'dark' ? '#ffffff' : 'var(--color-navy-blue)', marginTop: '4px' }}>August 10th, 2026</Text>
-                    </Paper>
-                  </SimpleGrid>
+                  <Stack gap="sm">
+                    {[
+                      { label: 'Abstract Submission Opens', value: 'August 10, 2026', color: '#0077ff' },
+                      { label: 'Early Bird Registration Opens', value: 'August 10, 2026', color: '#10b981' },
+                      { label: 'Early Bird Registration Closes', value: 'October 31, 2026', color: '#0077ff' },
+                      { label: 'Author Notification of Acceptance', value: 'Within 14 Days', color: '#0077ff' },
+                      { label: 'Final Registration Deadline', value: 'April 20, 2027', color: '#0077ff' },
+                      { label: 'Conference Inauguration', value: 'May 13, 2027 (Rome)', color: '#10b981' }
+                    ].map((item, index) => (
+                      <Paper
+                        key={index}
+                        p="sm"
+                        radius="md"
+                        style={{
+                          background: colorScheme === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,119,255,0.02)',
+                          borderLeft: `4px solid ${item.color}`,
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                          cursor: 'default'
+                        }}
+                      >
+                        <Text size="sm" fw={600} style={{ color: colorScheme === 'dark' ? 'rgba(255,255,255,0.85)' : 'var(--color-navy-blue)' }}>
+                          {item.label}
+                        </Text>
+                        <Text size="sm" fw={700} style={{ color: colorScheme === 'dark' ? '#ffffff' : 'var(--color-text-dark)', marginLeft: '10px', textAlign: 'right' }}>
+                          {item.value}
+                        </Text>
+                      </Paper>
+                    ))}
+                  </Stack>
                 </Paper>
               </Stack>
             </motion.div>
@@ -216,11 +319,11 @@ export default function Home() {
       </Box>
 
       {/* Conference Topics Section */}
-      <Box 
-        component="section" 
-        id="topics" 
-        style={{ 
-          padding: '80px 0', 
+      <Box
+        component="section"
+        id="topics"
+        style={{
+          padding: '80px 0',
           background: colorScheme === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.4)',
           borderBottom: colorScheme === 'dark' ? '1px solid rgba(255,255,255,0.05)' : 'none'
         }}
@@ -231,7 +334,7 @@ export default function Home() {
               Scientific Tracks
             </div>
             <Title order={2} style={{ fontFamily: 'var(--font-title)', fontSize: '32px' }}>
-              Key Conference Topics Discussed
+              Key Topics
             </Title>
             <Text c="dimmed" style={{ maxWidth: '600px' }} size="sm">
               Discover the core fields of investigation, panels, and oral abstracts defining our two-day academic schedule.
@@ -307,11 +410,11 @@ export default function Home() {
       </Box>
 
       {/* Agenda Section */}
-      <Box 
-        component="section" 
-        id="agenda" 
-        style={{ 
-          padding: '80px 0', 
+      <Box
+        component="section"
+        id="agenda"
+        style={{
+          padding: '80px 0',
           background: colorScheme === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.2)',
           borderBottom: colorScheme === 'dark' ? '1px solid rgba(255,255,255,0.05)' : 'none'
         }}
@@ -353,11 +456,11 @@ export default function Home() {
       </Box>
 
       {/* About Rome & Travel Section */}
-      <Box 
-        component="section" 
-        id="rome" 
-        style={{ 
-          padding: '80px 0', 
+      <Box
+        component="section"
+        id="rome"
+        style={{
+          padding: '80px 0',
           background: colorScheme === 'dark' ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.3)',
           borderBottom: colorScheme === 'dark' ? '1px solid rgba(255,255,255,0.05)' : 'none'
         }}
@@ -374,7 +477,7 @@ export default function Home() {
               <Text size="sm" c="dimmed" style={{ lineHeight: 1.6, marginBottom: '15px' }}>
                 Known as the <b>"Eternal City"</b>, Rome is a living museum where nearly 3,000 years of globally influential art, architecture, and culture are seamlessly woven into a bustling modern metropolis. It boasts iconic ruins like the Colosseum and the Roman Forum, alongside the majestic Vatican City.
               </Text>
-              
+
               <Text size="sm" fw={700} style={{ fontFamily: 'var(--font-title)', fontSize: '16px', color: colorScheme === 'dark' ? '#ffffff' : 'var(--color-navy-blue)', marginBottom: '8px' }}>
                 Why Visit in May?
               </Text>
@@ -419,13 +522,22 @@ export default function Home() {
             <Title order={2} style={{ fontFamily: 'var(--font-title)', fontSize: '32px' }}>
               Conference & Rome Photo Gallery
             </Title>
+            <Text size="sm" c="dimmed" style={{ maxWidth: '640px' }}>
+              Explore moments from our previous international conferences, scientific presentation sessions, delegate luncheons, and iconic sights in Rome.
+            </Text>
           </Stack>
 
           <Tabs value={galleryCategory} onChange={(val) => setGalleryCategory(val || 'ALL')} style={{ width: '100%' }}>
             <Tabs.List justify="center" style={{ borderBottom: 'none', marginBottom: '30px' }}>
-              <Tabs.Tab value="ALL" style={{ fontSize: '14px', fontWeight: 600 }}>All Photos</Tabs.Tab>
-              <Tabs.Tab value="CONFERENCE" style={{ fontSize: '14px', fontWeight: 600 }}>Previous Conferences</Tabs.Tab>
-              <Tabs.Tab value="ROME" style={{ fontSize: '14px', fontWeight: 600 }}>Rome Sightseeing</Tabs.Tab>
+              <Tabs.Tab value="ALL" style={{ fontSize: '15px', fontWeight: 600 }}>
+                All Photos ({gallery.length})
+              </Tabs.Tab>
+              <Tabs.Tab value="CONFERENCE" style={{ fontSize: '15px', fontWeight: 600 }}>
+                Previous Conferences ({gallery.filter((i: any) => i.category === 'CONFERENCE').length})
+              </Tabs.Tab>
+              <Tabs.Tab value="ROME" style={{ fontSize: '15px', fontWeight: 600 }}>
+                Rome Sightseeing ({gallery.filter((i: any) => i.category === 'ROME').length})
+              </Tabs.Tab>
             </Tabs.List>
 
             <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg">
@@ -433,25 +545,84 @@ export default function Home() {
                 <motion.div
                   key={item.id}
                   layout
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <Card p={0} radius="lg" style={{ overflow: 'hidden', height: '250px', border: '1px solid var(--glass-border)' }}>
-                    <Image src={item.imagePath} height={250} alt={item.title || 'Gallery item'} />
+                  <Card
+                    p={0}
+                    radius="lg"
+                    onClick={() => setSelectedGalleryItem(item)}
+                    style={{
+                      overflow: 'hidden',
+                      height: '260px',
+                      border: '1px solid var(--glass-border)',
+                      position: 'relative',
+                      cursor: 'pointer',
+                      boxShadow: 'var(--glass-shadow)',
+                      transition: 'transform 0.25s ease, box-shadow 0.25s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-4px)';
+                      e.currentTarget.style.boxShadow = '0 12px 24px rgba(0,0,0,0.15)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = 'var(--glass-shadow)';
+                    }}
+                  >
+                    <Image
+                      src={item.imagePath}
+                      height={260}
+                      alt={item.title || 'Gallery item'}
+                      style={{
+                        objectFit: 'cover',
+                        width: '100%',
+                        transition: 'transform 0.4s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'scale(1.05)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'scale(1)';
+                      }}
+                    />
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: 12,
+                        left: 12,
+                        zIndex: 2
+                      }}
+                    >
+                      <Badge
+                        variant="filled"
+                        size="sm"
+                        color={item.category === 'CONFERENCE' ? 'blue' : 'teal'}
+                        style={{ textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.5px' }}
+                      >
+                        {item.category === 'CONFERENCE' ? 'Conference' : 'Rome'}
+                      </Badge>
+                    </div>
                     <div
                       style={{
                         position: 'absolute',
                         bottom: 0,
                         left: 0,
                         right: 0,
-                        background: 'linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0))',
-                        padding: '20px 15px',
-                        color: '#fff'
+                        background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0) 100%)',
+                        padding: '24px 16px 14px',
+                        color: '#fff',
+                        zIndex: 2
                       }}
                     >
-                      <Text size="sm" fw={700} style={{ fontFamily: 'var(--font-title)' }}>{item.title}</Text>
+                      <Text size="sm" fw={700} style={{ fontFamily: 'var(--font-title)', textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>
+                        {item.title}
+                      </Text>
+                      <Text size="xs" style={{ opacity: 0.85, marginTop: '2px' }}>
+                        Click to view full photo
+                      </Text>
                     </div>
                   </Card>
                 </motion.div>
@@ -461,18 +632,59 @@ export default function Home() {
         </Container>
       </Box>
 
+      {/* Gallery Photo Lightbox Modal */}
+      <Modal
+        opened={!!selectedGalleryItem}
+        onClose={() => setSelectedGalleryItem(null)}
+        title={
+          selectedGalleryItem && (
+            <Group gap="xs">
+              <Badge color={selectedGalleryItem.category === 'CONFERENCE' ? 'blue' : 'teal'} size="sm">
+                {selectedGalleryItem.category === 'CONFERENCE' ? 'Conference Event' : 'Rome Landmark'}
+              </Badge>
+              <Text fw={700} size="md" style={{ fontFamily: 'var(--font-title)' }}>
+                {selectedGalleryItem.title}
+              </Text>
+            </Group>
+          )
+        }
+        size="xl"
+        radius="lg"
+        centered
+        padding="md"
+      >
+        {selectedGalleryItem && (
+          <Stack gap="xs" align="center">
+            <Image
+              src={selectedGalleryItem.imagePath}
+              alt={selectedGalleryItem.title}
+              radius="md"
+              style={{
+                maxHeight: '75vh',
+                objectFit: 'contain',
+                width: '100%',
+                borderRadius: '8px'
+              }}
+            />
+            <Text size="sm" c="dimmed" ta="center">
+              {selectedGalleryItem.title}
+            </Text>
+          </Stack>
+        )}
+      </Modal>
+
       {/* Sponsors Section - Hidden visually using style */}
-      <Box 
-        component="section" 
-        id="sponsors" 
+      <Box
+        component="section"
+        id="sponsors"
         style={{ display: 'none' }}
       >
         <Container size="xl">
-          <Text 
-            ta="center" 
-            fw={700} 
-            size="xs" 
-            c={colorScheme === 'dark' ? 'rgba(255,255,255,0.5)' : 'dimmed'} 
+          <Text
+            ta="center"
+            fw={700}
+            size="xs"
+            c={colorScheme === 'dark' ? 'rgba(255,255,255,0.5)' : 'dimmed'}
             style={{ letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '30px' }}
           >
             Proudly Supported & Sponsored By
@@ -484,30 +696,30 @@ export default function Home() {
                 : s.logoPath;
 
               return (
-                <Group 
-                  key={s.id} 
-                  gap="xs" 
-                  style={{ 
-                    opacity: 0.85, 
-                    '&:hover': { opacity: 1 }, 
-                    transition: 'opacity 0.2s ease', 
-                    cursor: 'pointer' 
+                <Group
+                  key={s.id}
+                  gap="xs"
+                  style={{
+                    opacity: 0.85,
+                    '&:hover': { opacity: 1 },
+                    transition: 'opacity 0.2s ease',
+                    cursor: 'pointer'
                   }}
                 >
-                  <Image 
-                    src={logoUrl} 
-                    width={120} 
-                    height={50} 
-                    style={{ 
-                      objectFit: 'contain', 
-                      filter: colorScheme === 'dark' 
-                        ? 'brightness(1.2)' 
-                        : 'grayscale(100%) brightness(80%)' 
-                    }} 
+                  <Image
+                    src={logoUrl}
+                    width={120}
+                    height={50}
+                    style={{
+                      objectFit: 'contain',
+                      filter: colorScheme === 'dark'
+                        ? 'brightness(1.2)'
+                        : 'grayscale(100%) brightness(80%)'
+                    }}
                   />
-                  <Text 
-                    size="sm" 
-                    fw={700} 
+                  <Text
+                    size="sm"
+                    fw={700}
                     c={colorScheme === 'dark' ? 'rgba(255,255,255,0.7)' : 'rgba(12,26,48,0.7)'}
                   >
                     {s.name}
@@ -548,39 +760,102 @@ export default function Home() {
           <SimpleGrid cols={{ base: 1, md: 2 }} spacing="xl">
             <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
               <div style={{ background: 'rgba(16,185,129,0.1)', color: 'var(--color-emerald-green)', padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: 700, letterSpacing: '1px', display: 'inline-block', marginBottom: '15px', textTransform: 'uppercase' }}>
-                Venue Location
+                Official Venue Location
               </div>
-              <Title order={2} style={{ fontFamily: 'var(--font-title)', fontSize: '32px', marginBottom: '15px' }}>
+              <Title order={2} style={{ fontFamily: 'var(--font-title)', fontSize: '32px', marginBottom: '10px' }}>
                 Conference Venue & Hotel Info
               </Title>
-              <Text size="md" c="dimmed" style={{ lineHeight: 1.6, marginBottom: '20px' }}>
-                The conference venue hotel details in Rome will be announced shortly. The venue will be a premium 4/5 star hotel situated centrally in Rome, Italy, fully equipped with modular conference halls, seminar rooms, dining lounges, and delegate accommodation suites.
+              <Text fw={700} size="lg" c="blue" style={{ marginBottom: '15px' }}>
+                Holiday Inn Rome - Eur Parco Dei Medici by IHG
               </Text>
-              
+              <Text size="md" c="dimmed" style={{ lineHeight: 1.6, marginBottom: '20px' }}>
+                We are proud to host the Global Nursing Conference 2027 at the distinguished <b>Holiday Inn Rome - Eur Parco Dei Medici by IHG</b> in Rome, Italy. The hotel offers state-of-the-art modular conference auditoriums, cutting-edge AV facilities, executive dining lounges, and dedicated delegate suites set within quiet, green surroundings close to both Rome FCO Airport and the historic city center.
+              </Text>
+
               <Stack gap="sm">
                 <Paper p="md" radius="md" style={{ border: '1px solid var(--glass-border)', background: 'var(--glass-bg)' }}>
-                  <Text fw={700} size="sm">📍 Centrally Located in Rome, Italy</Text>
-                  <Text size="xs" c="dimmed" style={{ marginTop: '2px' }}>Easy taxi and metro transit connections to Leonardo da Vinci–Fiumicino Airport (FCO).</Text>
+                  <Group justify="space-between" align="flex-start" wrap="nowrap">
+                    <div>
+                      <Text fw={700} size="sm">📍 Hotel Address</Text>
+                      <Text size="sm" fw={600} style={{ marginTop: '2px' }}>
+                        Holiday Inn Rome - Eur Parco Dei Medici by IHG
+                      </Text>
+                      <Text size="xs" c="dimmed" style={{ marginTop: '2px' }}>
+                        Viale Castello della Magliana, 65, 00148 Roma RM, Italy
+                      </Text>
+                    </div>
+                    <Button
+                      component="a"
+                      href="https://share.google/RXS2WVdiFVccyYdOU"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      size="xs"
+                      variant="light"
+                      color="blue"
+                      rightSection={<IconExternalLink size={14} />}
+                      style={{ flexShrink: 0 }}
+                    >
+                      View on Map
+                    </Button>
+                  </Group>
                 </Paper>
+
                 <Paper p="md" radius="md" style={{ border: '1px solid var(--glass-border)', background: 'var(--glass-bg)' }}>
-                  <Text fw={700} size="sm">✈️ Travel & Visa Support</Text>
-                  <Text size="xs" c="dimmed" style={{ marginTop: '2px' }}>Visa invitation letters are issued for registered delegates who submit abstracts or complete package payments.</Text>
+                  <Text fw={700} size="sm">✈️ Convenient Airport & Transit Connections</Text>
+                  <Text size="xs" c="dimmed" style={{ marginTop: '2px' }}>
+                    Located just 12 km from Leonardo da Vinci–Fiumicino Airport (FCO) and 15 km from Rome city center. Easily accessible via Muratella train station, hotel shuttle service, and taxi connections.
+                  </Text>
+                </Paper>
+
+                <Paper p="md" radius="md" style={{ border: '1px solid var(--glass-border)', background: 'var(--glass-bg)' }}>
+                  <Text fw={700} size="sm">🏨 Delegate Amenities & Accommodation</Text>
+                  <Text size="xs" c="dimmed" style={{ marginTop: '2px' }}>
+                    Equipped with high-tech conference halls, seminar breakout rooms, complimentary high-speed Wi-Fi, swimming pool, fitness center, and on-site Italian dining.
+                  </Text>
+                </Paper>
+
+                <Paper p="md" radius="md" style={{ border: '1px solid var(--glass-border)', background: 'var(--glass-bg)' }}>
+                  <Text fw={700} size="sm">📄 Travel & Visa Support</Text>
+                  <Text size="xs" c="dimmed" style={{ marginTop: '2px' }}>
+                    Official visa invitation letters are promptly issued to registered delegates and keynote speakers once abstracts or registrations are confirmed.
+                  </Text>
                 </Paper>
               </Stack>
             </motion.div>
 
             <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }} style={{ width: '100%' }}>
-              <Paper radius="lg" style={{ overflow: 'hidden', border: '1px solid var(--glass-border)' }}>
-                {/* Embed a generic beautiful Google Maps view of Rome, Italy */}
-                <AspectRatio ratio={16 / 10}>
+              <Paper radius="lg" style={{ overflow: 'hidden', border: '1px solid var(--glass-border)', boxShadow: 'var(--glass-shadow)' }}>
+                {/* Embed Google Maps view of Holiday Inn Rome - Eur Parco Dei Medici */}
+                <AspectRatio ratio={16 / 11}>
                   <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d190028.98064553313!2d12.371191599427218!3d41.90998595443217!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x132f6196f9928ebb%3A0xb90f770693656e38!2sRome%2C%20Metropolitan%20City%20of%20Rome%20Capital%2C%20Italy!5e0!3m2!1sen!2sus!4v1700000000000!5m2!1sen!2sus"
-                    title="Rome, Italy Venue Map"
-                    style={{ border: 0 }}
+                    src="https://maps.google.com/maps?q=Holiday+Inn+Rome+-+Eur+Parco+Dei+Medici,+Viale+Castello+della+Magliana,+65,+00148+Roma+RM,+Italy&t=&z=15&ie=UTF8&iwloc=&output=embed"
+                    title="Holiday Inn Rome - Eur Parco Dei Medici, Rome, Italy Venue Map"
+                    style={{ border: 0, width: '100%', height: '100%' }}
                     allowFullScreen
                     loading="lazy"
                   />
                 </AspectRatio>
+                <Box p="md" style={{ background: 'var(--glass-bg)' }}>
+                  <Group justify="space-between" align="center">
+                    <div>
+                      <Text fw={700} size="sm">Holiday Inn Rome - Eur Parco Dei Medici by IHG</Text>
+                      <Text size="xs" c="dimmed">Viale Castello della Magliana, 65, 00148 Roma RM, Italy</Text>
+                    </div>
+                    <Button
+                      component="a"
+                      href="https://share.google/RXS2WVdiFVccyYdOU"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      size="sm"
+                      variant="filled"
+                      color="blue"
+                      leftSection={<IconMapPin size={16} />}
+                      rightSection={<IconExternalLink size={14} />}
+                    >
+                      Get Directions
+                    </Button>
+                  </Group>
+                </Box>
               </Paper>
             </motion.div>
           </SimpleGrid>
@@ -613,7 +888,7 @@ export default function Home() {
                     <Text size="sm" fw={600} style={{ display: 'block' }}>contact@nursingconference.net</Text>
                   </div>
                 </Group>
-                
+
                 {/* Phone number and Office address hidden visually using style */}
                 <Group gap="sm" style={{ display: 'none' }}>
                   <div style={{ background: 'rgba(0,119,255,0.1)', color: '#0077ff', borderRadius: '10px', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: '8px' }}>
@@ -648,7 +923,7 @@ export default function Home() {
                       error={errors.name?.message}
                       {...register('name')}
                     />
-                    
+
                     <TextInput
                       label="Email Address"
                       placeholder="jane@example.com"

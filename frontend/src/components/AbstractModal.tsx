@@ -53,6 +53,30 @@ export default function AbstractModal({ opened, onClose }: AbstractModalProps) {
     }
   });
 
+  const resetFormState = () => {
+    reset({
+      prefix: '',
+      name: '',
+      email: '',
+      phone: '',
+      profession: '',
+      country: '',
+      title: '',
+      topicsDiscussed: ''
+    });
+    setFile(null);
+    setFileError(null);
+    const fileInput = document.getElementById('abstract-file-upload') as HTMLInputElement | null;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  };
+
+  const handleClose = () => {
+    resetFormState();
+    onClose();
+  };
+
   const abstractMutation = useMutation({
     mutationFn: async (data: AbstractFormData) => {
       if (!file) throw new Error('No file selected');
@@ -87,13 +111,11 @@ export default function AbstractModal({ opened, onClose }: AbstractModalProps) {
         color: 'teal',
         icon: <IconCheck size={18} />
       });
-      reset();
-      setFile(null);
-      setFileError(null);
+      resetFormState();
       onClose();
     },
     onError: (error: any) => {
-      const errorMsg = error.response?.data?.message || 'Failed to submit abstract';
+      const errorMsg = error.response?.data?.detail || error.response?.data?.message || error.message || 'Failed to submit abstract';
       notifications.show({
         title: 'Submission Failed',
         message: errorMsg,
@@ -168,7 +190,7 @@ export default function AbstractModal({ opened, onClose }: AbstractModalProps) {
   return (
     <Modal
       opened={opened}
-      onClose={onClose}
+      onClose={handleClose}
       title="Submit Research Abstract"
       size="lg"
       radius="md"
@@ -186,7 +208,8 @@ export default function AbstractModal({ opened, onClose }: AbstractModalProps) {
             <Text size="xs" style={{ marginTop: '4px' }}>
               • Submissions must be written in English. Max 300 words.<br />
               • Limit file sizes to 10MB maximum.<br />
-              • Supported formats: <b>PDF, DOC, DOCX</b>.
+              • Supported formats: <b>PDF, DOC, DOCX</b>.<br />
+              • You can submit your abstract through email at <b>nursing@syntrophyglobalconferences.com</b>
             </Text>
             <Button
               variant="subtle"
@@ -274,22 +297,21 @@ export default function AbstractModal({ opened, onClose }: AbstractModalProps) {
             control={control}
             render={({ field }) => (
               <Select
-                label="Topics Discussed"
+                label="Key Topics"
                 placeholder="Select topic"
                 data={[
-                  'The Internet of Medical Things (IoMT)',
-                  'Cybersecurity & data privacy in Nursing',
-                  'Nursing Education and Learning',
-                  'Mental Health & Well-being of Nurses',
-                  'Advanced Practices & Expanded Roles',
-                  'Green Nursing & Sustainability',
-                  'Cultural competency & Trauma-Informed care',
-                  'Disaster Response & Global Health security',
-                  'Maternal & Child Health Milestones',
-                  'Nurses Policy & Advocacy',
-                  'Role of AI In Healthcare',
-                  'Scaling of Local innovations in Nursing',
-                  'Nursing-Led primary care'
+                  'Nursing Education, practice & Management',
+                  'Innovations in Patient Care',
+                  'Acute / Critical Care Nursing',
+                  'Care of Patients with Chronic Disease',
+                  'Crisis and Risk Management Primary Care Nursing',
+                  'Paediatric Nursing care & NICU',
+                  'Oncology nursing',
+                  'Ageing and Geriatric Nursing',
+                  'Mental Health Nursing',
+                  'Types of Nursing & Training',
+                  'Trends of AI in Healthcare and Nursing',
+                  'Nursing Ethics & Informatics'
                 ]}
                 error={errors.topicsDiscussed?.message}
                 required
@@ -366,7 +388,16 @@ export default function AbstractModal({ opened, onClose }: AbstractModalProps) {
                   </div>
                 </Group>
                 
-                <ActionIcon variant="light" color="red" radius="md" onClick={() => setFile(null)}>
+                <ActionIcon
+                  variant="light"
+                  color="red"
+                  radius="md"
+                  onClick={() => {
+                    setFile(null);
+                    const fileInput = document.getElementById('abstract-file-upload') as HTMLInputElement | null;
+                    if (fileInput) fileInput.value = '';
+                  }}
+                >
                   <IconX size={16} />
                 </ActionIcon>
               </Paper>

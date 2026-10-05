@@ -1,4 +1,5 @@
 import os
+import threading
 import jwt
 import datetime
 import json
@@ -17,21 +18,31 @@ import pandas as pd
 import io
 from a2wsgi import ASGIMiddleware
 
-# Load .env variables manually if not already set
-def load_dotenv_file(filepath=".env"):
-    if os.path.exists(filepath):
-        with open(filepath, "r") as f:
-            for line in f:
-                line = line.strip()
-                if not line or line.startswith("#"):
-                    continue
-                if "=" in line:
-                    key, val = line.split("=", 1)
-                    key = key.strip()
-                    val = val.strip().strip('"').strip("'")
-                    os.environ[key] = val
+# Absolute Base Directory for robust path resolution on cPanel / Passenger WSGI
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Try loading from standard paths
+# Load .env variables manually if not already set
+def load_dotenv_file(filepath=None):
+    if filepath is None:
+        filepath = os.path.join(BASE_DIR, ".env")
+    if os.path.exists(filepath):
+        try:
+            with open(filepath, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith("#"):
+                        continue
+                    if "=" in line:
+                        key, val = line.split("=", 1)
+                        key = key.strip()
+                        val = val.strip().strip('"').strip("'")
+                        os.environ[key] = val
+        except Exception as e:
+            print(f"Error reading .env at {filepath}: {e}")
+
+# Try loading from absolute path and fallback paths
+load_dotenv_file(os.path.join(BASE_DIR, ".env"))
+load_dotenv_file(os.path.join(BASE_DIR, "..", ".env"))
 load_dotenv_file(".env")
 load_dotenv_file("backend/.env")
 
@@ -59,10 +70,11 @@ SMTP_FROM_EMAIL = os.getenv("SMTP_FROM_EMAIL", "contact@syntrophyconferences.com
 SMTP_FROM_NAME = os.getenv("SMTP_FROM_NAME", "Syntrophy Conferences")
 ADMIN_NOTIFICATION_EMAIL = os.getenv("ADMIN_NOTIFICATION_EMAIL", "contact@syntrophyconferences.com")
 
-UPLOAD_DIR = "uploads"
+UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-DB_FILE = "db.json"
+DB_FILE = os.path.join(BASE_DIR, "db.json")
+LOG_FILE = os.path.join(BASE_DIR, "email_errors.log")
 
 # Seed Data
 DEFAULT_SPEAKERS = [
@@ -360,19 +372,33 @@ DEFAULT_SPONSORS = [
 ]
 
 DEFAULT_GALLERY = [
-    { "id": "gal1", "title": "Colosseum, Rome", "imagePath": "https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&q=80&w=600", "category": "ROME", "createdAt": datetime.datetime.utcnow().isoformat() + "Z" },
-    { "id": "gal2", "title": "Vatican City", "imagePath": "https://images.unsplash.com/photo-1542820229-081e0c12af0b?auto=format&fit=crop&q=80&w=600", "category": "ROME", "createdAt": datetime.datetime.utcnow().isoformat() + "Z" },
-    { "id": "gal3", "title": "Trevi Fountain", "imagePath": "https://images.unsplash.com/photo-1531572753322-ad063cecc140?auto=format&fit=crop&q=80&w=600", "category": "ROME", "createdAt": datetime.datetime.utcnow().isoformat() + "Z" },
-    { "id": "gal4", "title": "Previous Conference Keynote", "imagePath": "https://images.unsplash.com/photo-1475721027785-f74eccf877e2?auto=format&fit=crop&q=80&w=600", "category": "CONFERENCE", "createdAt": datetime.datetime.utcnow().isoformat() + "Z" },
-    { "id": "gal5", "title": "Panel Session Discussion", "imagePath": "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80&w=600", "category": "CONFERENCE", "createdAt": datetime.datetime.utcnow().isoformat() + "Z" },
-    { "id": "gal6", "title": "Poster Session Networking", "imagePath": "https://images.unsplash.com/photo-1515187029135-18ee286d815b?auto=format&fit=crop&q=80&w=600", "category": "CONFERENCE", "createdAt": datetime.datetime.utcnow().isoformat() + "Z" }
+    { "id": "gal_dsc01302", "title": "Registration & Conference Materials", "imagePath": "/gallery/dsc01302.jpg", "category": "CONFERENCE", "order": 1, "createdAt": datetime.datetime.utcnow().isoformat() + "Z" },
+    { "id": "gal_dsc01355", "title": "Keynote Address on Healthcare Innovation", "imagePath": "/gallery/dsc01355.jpg", "category": "CONFERENCE", "order": 2, "createdAt": datetime.datetime.utcnow().isoformat() + "Z" },
+    { "id": "gal_dsc01367", "title": "Clinical Resilience & Patient Care Session", "imagePath": "/gallery/dsc01367.jpg", "category": "CONFERENCE", "order": 3, "createdAt": datetime.datetime.utcnow().isoformat() + "Z" },
+    { "id": "gal_dsc01371", "title": "Global Delegates Networking Discussion", "imagePath": "/gallery/dsc01371.jpg", "category": "CONFERENCE", "order": 4, "createdAt": datetime.datetime.utcnow().isoformat() + "Z" },
+    { "id": "gal_dsc01372", "title": "Executive Networking Luncheon", "imagePath": "/gallery/dsc01372.jpg", "category": "CONFERENCE", "order": 5, "createdAt": datetime.datetime.utcnow().isoformat() + "Z" },
+    { "id": "gal_dsc01375", "title": "International Faculty Round-Table Lunch", "imagePath": "/gallery/dsc01375.jpg", "category": "CONFERENCE", "order": 6, "createdAt": datetime.datetime.utcnow().isoformat() + "Z" },
+    { "id": "gal_dsc01398", "title": "Scientific Panel Moderation & Discussion", "imagePath": "/gallery/dsc01398.jpg", "category": "CONFERENCE", "order": 7, "createdAt": datetime.datetime.utcnow().isoformat() + "Z" },
+    { "id": "gal_dsc01404", "title": "Distinguished Speaker Oral Presentation", "imagePath": "/gallery/dsc01404.jpg", "category": "CONFERENCE", "order": 8, "createdAt": datetime.datetime.utcnow().isoformat() + "Z" },
+    { "id": "gal_dsc01443", "title": "Organizing Committee & Keynote Delegation", "imagePath": "/gallery/dsc01443.jpg", "category": "CONFERENCE", "order": 9, "createdAt": datetime.datetime.utcnow().isoformat() + "Z" },
+    { "id": "gal_dsc01445", "title": "International Conference Faculty & Speakers", "imagePath": "/gallery/dsc01445.jpg", "category": "CONFERENCE", "order": 10, "createdAt": datetime.datetime.utcnow().isoformat() + "Z" },
+    { "id": "gal_dsc01448", "title": "Advanced Surgical & Oncology Session", "imagePath": "/gallery/dsc01448.jpg", "category": "CONFERENCE", "order": 11, "createdAt": datetime.datetime.utcnow().isoformat() + "Z" },
+    { "id": "gal_dsc01454", "title": "Optical & Diagnostic Imaging Presentation", "imagePath": "/gallery/dsc01454.jpg", "category": "CONFERENCE", "order": 12, "createdAt": datetime.datetime.utcnow().isoformat() + "Z" },
+    { "id": "gal_dsc01466", "title": "Plenary Lecture by Prof. Masatoshi Tagawa", "imagePath": "/gallery/dsc01466.jpg", "category": "CONFERENCE", "order": 13, "createdAt": datetime.datetime.utcnow().isoformat() + "Z" },
+    { "id": "gal_dsc01476", "title": "Outstanding Poster Presentation Award", "imagePath": "/gallery/dsc01476.jpg", "category": "CONFERENCE", "order": 14, "createdAt": datetime.datetime.utcnow().isoformat() + "Z" },
+    { "id": "gal1", "title": "Colosseum, Rome", "imagePath": "https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&q=80&w=800", "category": "ROME", "order": 15, "createdAt": datetime.datetime.utcnow().isoformat() + "Z" },
+    { "id": "gal2", "title": "Vatican City & St. Peter's", "imagePath": "https://images.unsplash.com/photo-1542820229-081e0c12af0b?auto=format&fit=crop&q=80&w=800", "category": "ROME", "order": 16, "createdAt": datetime.datetime.utcnow().isoformat() + "Z" },
+    { "id": "gal3", "title": "Trevi Fountain", "imagePath": "https://images.unsplash.com/photo-1531572753322-ad063cecc140?auto=format&fit=crop&q=80&w=800", "category": "ROME", "order": 17, "createdAt": datetime.datetime.utcnow().isoformat() + "Z" },
+    { "id": "gal7", "title": "The Pantheon, Rome", "imagePath": "https://images.unsplash.com/photo-1555992828-ca4dbe41d294?auto=format&fit=crop&q=80&w=800", "category": "ROME", "order": 18, "createdAt": datetime.datetime.utcnow().isoformat() + "Z" }
 ]
 
 DEFAULT_SETTINGS = [
     { "key": "conference_title", "value": "Global Nursing Conference 2027" },
     { "key": "conference_theme", "value": "Nex-Gen Nursing: Trends, Techs, Triumphs in Global Health" },
     { "key": "conference_dates", "value": "May 13-14, 2027" },
-    { "key": "conference_venue", "value": "To be announced, Rome, Italy" },
+    { "key": "conference_venue", "value": "Holiday Inn Rome - Eur Parco Dei Medici by IHG, Viale Castello della Magliana, 65, 00148 Roma RM, Italy" },
+    { "key": "conference_venue_address", "value": "Viale Castello della Magliana, 65, 00148 Roma RM, Italy" },
+    { "key": "conference_venue_link", "value": "https://share.google/RXS2WVdiFVccyYdOU" },
     { "key": "support_email", "value": "contact@syntrophyconferences.com" },
     { "key": "support_phone", "value": "+39 06 1234567" }
 ]
@@ -438,6 +464,7 @@ class AbstractInput(BaseModel):
     profession: str
     country: str
     title: str
+    topicsDiscussed: Optional[str] = None
     fileName: str
     filePath: str
 
@@ -453,11 +480,16 @@ class MessageInput(BaseModel):
     email: str
     phone: Optional[str] = None
     subject: Optional[str] = None
+    message: Optional[str] = None
 
 
 def send_email_smtp(to_email: str, subject: str, body: str, attachment_path: Optional[str] = None, attachment_name: Optional[str] = None):
-    # Fetch SMTP variables dynamically from environment for cPanel compatibility
+    # Ensure .env is loaded if environment is missing SMTP config
     host = os.getenv("SMTP_HOST") or os.getenv("REDIRECT_SMTP_HOST", "")
+    if not host:
+        load_dotenv_file()
+        host = os.getenv("SMTP_HOST") or os.getenv("REDIRECT_SMTP_HOST", "")
+
     username = os.getenv("SMTP_USERNAME") or os.getenv("REDIRECT_SMTP_USERNAME", "")
     password = os.getenv("SMTP_PASSWORD") or os.getenv("REDIRECT_SMTP_PASSWORD", "")
     from_email = os.getenv("SMTP_FROM_EMAIL") or os.getenv("REDIRECT_SMTP_FROM_EMAIL", "contact@syntrophyconferences.com")
@@ -470,15 +502,11 @@ def send_email_smtp(to_email: str, subject: str, body: str, attachment_path: Opt
         port = 587
 
     if not host:
-        print(f"\n--- [MOCK EMAIL] ---")
-        print(f"SMTP is not configured in environment (missing SMTP_HOST).")
-        print(f"Would send email to: {to_email}")
-        print(f"Subject: {subject}")
-        print(f"Body:\n{body}")
-        if attachment_path:
-            print(f"Attachment: {attachment_path} (Name: {attachment_name})")
-        print(f"--------------------\n")
-        return
+        mock_msg = f"\n--- [MOCK EMAIL] ---\nSMTP is not configured in environment (missing SMTP_HOST).\nWould send email to: {to_email}\nSubject: {subject}\nBody:\n{body}\n--------------------\n"
+        print(mock_msg)
+        with open(LOG_FILE, "a", encoding="utf-8") as log_file:
+            log_file.write(f"\n--- MOCK EMAIL at {datetime.datetime.now()} ---\n{mock_msg}")
+        return {"success": False, "detail": "SMTP_HOST missing in environment"}
 
     try:
         msg = MIMEMultipart()
@@ -503,7 +531,7 @@ def send_email_smtp(to_email: str, subject: str, body: str, attachment_path: Opt
             except Exception as e:
                 print(f"Error attaching file {attachment_path} to email: {e}")
 
-        # Send email
+        # Send email with robust timeout for server environments
         if port == 465:
             server = smtplib.SMTP_SSL(host, port, timeout=10)
         else:
@@ -513,31 +541,34 @@ def send_email_smtp(to_email: str, subject: str, body: str, attachment_path: Opt
                 server.starttls()
                 server.ehlo()
             except Exception as tls_err:
-                print(f"STARTTLS failed or skipped: {tls_err}")
+                print(f"STARTTLS note: {tls_err}")
         
-        if password:
+        if username and password:
             server.login(username, password)
             
         server.sendmail(from_email, to_email, msg.as_string())
         server.quit()
         
         # Log successful email send
-        with open("email_errors.log", "a") as log_file:
+        with open(LOG_FILE, "a", encoding="utf-8") as log_file:
             log_file.write(f"\n--- SUCCESS at {datetime.datetime.now()} ---\n")
             log_file.write(f"To: {to_email} | Subject: {subject}\n")
             log_file.write("---------------------------------------\n")
             
         print(f"Successfully sent email to {to_email} with subject: {subject}")
+        return {"success": True, "detail": f"Sent to {to_email}"}
     except Exception as e:
         import traceback
-        # Log SMTP errors to a file for cPanel troubleshooting
-        with open("email_errors.log", "a") as log_file:
+        err_detail = traceback.format_exc()
+        # Log SMTP errors to LOG_FILE for cPanel troubleshooting
+        with open(LOG_FILE, "a", encoding="utf-8") as log_file:
             log_file.write(f"\n--- ERROR at {datetime.datetime.now()} ---\n")
             log_file.write(f"To: {to_email}\n")
             log_file.write(f"Error: {e}\n")
-            log_file.write(traceback.format_exc())
+            log_file.write(err_detail)
             log_file.write("-------------------------------------\n")
         print(f"Error sending email to {to_email}: {e}")
+        return {"success": False, "detail": str(e), "traceback": err_detail}
 
 def send_brochure_emails(payload: BrochureInput, created_at: str):
     admin_notification_email = os.getenv("ADMIN_NOTIFICATION_EMAIL") or os.getenv("REDIRECT_ADMIN_NOTIFICATION_EMAIL", "contact@syntrophyconferences.com")
@@ -561,7 +592,7 @@ def send_brochure_emails(payload: BrochureInput, created_at: str):
     client_body = (
         f"Dear {payload.name},\n"
         f"Thank you for your interest in our Syntrophy Global Nursing Conference 2027 May 13-14, 2027 Rome, Italy.\n"
-        f"If you need any assistance please free to revert to this email.\n\n"
+        f"If you need any assistance please feel free to revert to this email.\n\n"
         f"Regards,\n"
         f"Scientific committee\n"
         f"Syntrophy Conferences.\n"
@@ -574,6 +605,7 @@ def send_abstract_emails(payload: AbstractInput, created_at: str):
 
     # 1. Email to us (admin notification)
     admin_subject = "New Abstract Submitted to Nursing 2027 Rome, Italy"
+    topics_text = getattr(payload, "topicsDiscussed", None) or "N/A"
     admin_body = (
         f"A new research abstract has been submitted.\n\n"
         f"Complete Filled Form Details:\n"
@@ -583,6 +615,7 @@ def send_abstract_emails(payload: AbstractInput, created_at: str):
         f"Phone: {payload.phone}\n"
         f"Profession: {payload.profession}\n"
         f"Country: {payload.country}\n"
+        f"Key Topics: {topics_text}\n"
         f"Abstract Title: {payload.title}\n"
         f"File Name: {payload.fileName}\n"
         f"Submitted At: {created_at}\n"
@@ -610,6 +643,73 @@ def send_abstract_emails(payload: AbstractInput, created_at: str):
         f"Please revert back to this email if you need any assistance or if you have any queries.\n\n"
         f"Regards,\n"
         f"Syntrophy Conferences.\n"
+    )
+    send_email_smtp(payload.email, client_subject, client_body)
+
+def send_contact_emails(payload: MessageInput, created_at: str):
+    admin_notification_email = os.getenv("ADMIN_NOTIFICATION_EMAIL") or os.getenv("REDIRECT_ADMIN_NOTIFICATION_EMAIL", "contact@syntrophyconferences.com")
+    
+    # 1. Admin Notification
+    admin_subject = f"New Contact Message: {payload.subject or 'General Inquiry'}"
+    admin_body = (
+        f"A new contact message has been submitted on the conference website.\n\n"
+        f"Sender Name: {payload.name}\n"
+        f"Sender Email: {payload.email}\n"
+        f"Sender Phone: {payload.phone or 'N/A'}\n"
+        f"Subject: {payload.subject or 'General Inquiry'}\n"
+        f"Message:\n{payload.message or 'No message text provided'}\n\n"
+        f"Submitted At: {created_at}\n"
+    )
+    send_email_smtp(admin_notification_email, admin_subject, admin_body)
+    
+    # 2. Submitter Confirmation
+    client_subject = "Thank you for contacting Syntrophy Nursing Conferences 2027"
+    client_body = (
+        f"Dear {payload.name},\n\n"
+        f"Thank you for reaching out to the Global Nursing Conference 2027 support team.\n"
+        f"We have received your message regarding \"{payload.subject or 'your inquiry'}\" and our team will get back to you as soon as possible.\n\n"
+        f"Best regards,\n"
+        f"Organizing Committee\n"
+        f"Syntrophy Conferences\n"
+        f"contact@syntrophyconferences.com\n"
+    )
+    send_email_smtp(payload.email, client_subject, client_body)
+
+def send_registration_emails(payload: RegistrationInput, created_at: str):
+    admin_notification_email = os.getenv("ADMIN_NOTIFICATION_EMAIL") or os.getenv("REDIRECT_ADMIN_NOTIFICATION_EMAIL", "contact@syntrophyconferences.com")
+    
+    # 1. Admin Notification
+    admin_subject = f"New Conference Registration: {payload.name} ({payload.package})"
+    admin_body = (
+        f"A new conference registration has been submitted.\n\n"
+        f"Registrant Details:\n"
+        f"Name: {payload.name}\n"
+        f"Email: {payload.email}\n"
+        f"Phone: {payload.phone}\n"
+        f"Country: {payload.country}\n"
+        f"Package: {payload.package}\n"
+        f"Amount: {payload.amount} {payload.currency or 'USD'}\n"
+        f"Payment Method: {payload.paymentMethod}\n"
+        f"Comments: {payload.comments or 'None'}\n"
+        f"Submitted At: {created_at}\n"
+    )
+    send_email_smtp(admin_notification_email, admin_subject, admin_body)
+    
+    # 2. Registrant Confirmation
+    client_subject = "Registration Confirmation - Syntrophy Nursing Conference 2027, Rome, Italy"
+    client_body = (
+        f"Dear {payload.name},\n\n"
+        f"Thank you for registering for the Global Nursing Conference 2027 (May 13-14, 2027 in Rome, Italy).\n\n"
+        f"Registration Summary:\n"
+        f"Package: {payload.package}\n"
+        f"Total Amount: {payload.amount} {payload.currency or 'USD'}\n"
+        f"Payment Method: {payload.paymentMethod}\n\n"
+        f"Our team is reviewing your registration and will follow up with official admission and venue credentials.\n"
+        f"If you have any questions, feel free to reply to this email.\n\n"
+        f"Regards,\n"
+        f"Scientific Committee & Organizing Team\n"
+        f"Syntrophy Conferences\n"
+        f"contact@syntrophyconferences.com\n"
     )
     send_email_smtp(payload.email, client_subject, client_body)
 
@@ -676,6 +776,36 @@ def login(payload: LoginRequest):
         }
     raise HTTPException(status_code=401, detail="Invalid email or password")
 
+# SMTP Diagnostic Test Endpoint
+@app.get("/api/test-smtp")
+def test_smtp_endpoint(to: Optional[str] = None):
+    target = to or os.getenv("ADMIN_NOTIFICATION_EMAIL") or os.getenv("SMTP_USERNAME") or "contact@syntrophyconferences.com"
+    host = os.getenv("SMTP_HOST") or os.getenv("REDIRECT_SMTP_HOST", "")
+    if not host:
+        load_dotenv_file()
+        host = os.getenv("SMTP_HOST") or os.getenv("REDIRECT_SMTP_HOST", "")
+    username = os.getenv("SMTP_USERNAME") or os.getenv("REDIRECT_SMTP_USERNAME", "")
+    port = os.getenv("SMTP_PORT") or os.getenv("REDIRECT_SMTP_PORT", "587")
+    
+    test_body = (
+        f"This is a live diagnostic email from the Global Nursing Conference 2027 API.\n"
+        f"Host: {host}:{port}\n"
+        f"Timestamp: {datetime.datetime.now()}\n"
+    )
+    result = send_email_smtp(
+        to_email=target,
+        subject="[Test] Live SMTP Diagnostic Test",
+        body=test_body
+    )
+    return {
+        "status": "completed",
+        "target": target,
+        "smtp_host": host,
+        "smtp_port": port,
+        "smtp_user": username,
+        "result": result
+    }
+
 # Registrations
 @app.get("/api/registrations")
 def get_registrations():
@@ -691,6 +821,13 @@ def add_registration(payload: RegistrationInput):
     new_reg["createdAt"] = datetime.datetime.utcnow().isoformat() + "Z"
     db_data["registrations"].append(new_reg)
     save_db(db_data)
+    
+    # Send email notification & confirmation in background thread
+    try:
+        threading.Thread(target=send_registration_emails, args=(payload, new_reg["createdAt"]), daemon=True).start()
+    except Exception as e:
+        print(f"Error starting background email thread for registration: {e}")
+        
     return new_reg
 
 @app.put("/api/registrations/{id}")
@@ -717,7 +854,7 @@ def get_abstracts():
     return db_data.get("abstracts", [])
 
 @app.post("/api/abstracts")
-def add_abstract(payload: AbstractInput, background_tasks: BackgroundTasks):
+def add_abstract(payload: AbstractInput):
     db_data = load_db()
     new_abs = payload.dict()
     new_abs["id"] = f"abs_{int(datetime.datetime.utcnow().timestamp())}_{len(db_data['abstracts'])}"
@@ -726,8 +863,11 @@ def add_abstract(payload: AbstractInput, background_tasks: BackgroundTasks):
     db_data["abstracts"].append(new_abs)
     save_db(db_data)
     
-    # Send email in background
-    background_tasks.add_task(send_abstract_emails, payload, new_abs["createdAt"])
+    # Send email notifications in background thread so HTTP response returns immediately
+    try:
+        threading.Thread(target=send_abstract_emails, args=(payload, new_abs["createdAt"]), daemon=True).start()
+    except Exception as e:
+        print(f"Error starting background email thread for abstract: {e}")
     
     return new_abs
 
@@ -774,7 +914,7 @@ def get_brochure_leads():
     return db_data.get("brochureDownloads", [])
 
 @app.post("/api/brochures")
-def add_brochure_lead(payload: BrochureInput, background_tasks: BackgroundTasks):
+def add_brochure_lead(payload: BrochureInput):
     db_data = load_db()
     new_lead = payload.dict()
     new_lead["id"] = f"lead_{int(datetime.datetime.utcnow().timestamp())}_{len(db_data['brochureDownloads'])}"
@@ -782,8 +922,11 @@ def add_brochure_lead(payload: BrochureInput, background_tasks: BackgroundTasks)
     db_data["brochureDownloads"].append(new_lead)
     save_db(db_data)
     
-    # Send email in background
-    background_tasks.add_task(send_brochure_emails, payload, new_lead["createdAt"])
+    # Send email notifications in background thread
+    try:
+        threading.Thread(target=send_brochure_emails, args=(payload, new_lead["createdAt"]), daemon=True).start()
+    except Exception as e:
+        print(f"Error starting background email thread for brochure: {e}")
     
     return new_lead
 
@@ -809,6 +952,13 @@ def add_contact_message(payload: MessageInput):
     new_msg["createdAt"] = datetime.datetime.utcnow().isoformat() + "Z"
     db_data["contactMessages"].append(new_msg)
     save_db(db_data)
+    
+    # Send email notifications in background thread
+    try:
+        threading.Thread(target=send_contact_emails, args=(payload, new_msg["createdAt"]), daemon=True).start()
+    except Exception as e:
+        print(f"Error starting background email thread for contact: {e}")
+        
     return new_msg
 
 @app.put("/api/messages/{id}")
@@ -962,7 +1112,8 @@ def delete_sponsor_item(id: str, user: str = Depends(verify_token)):
 @app.get("/api/gallery")
 def get_gallery():
     db_data = load_db()
-    return db_data.get("gallery", [])
+    items = db_data.get("gallery", [])
+    return sorted(items, key=lambda x: (0 if x.get("category") == "CONFERENCE" else 1, x.get("order", 999), x.get("id", "")))
 
 @app.post("/api/gallery")
 def save_gallery_item(payload: Dict, user: str = Depends(verify_token)):

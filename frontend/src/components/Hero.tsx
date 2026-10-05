@@ -147,12 +147,19 @@ export default function Hero({ onOpenBrochure, onOpenAbstract }: HeroProps) {
               <Text
                 style={{
                   fontFamily: 'var(--font-sans)',
-                  fontSize: 'clamp(1rem, 2.5vw, 1.3rem)',
-                  fontWeight: 500,
-                  color: colorScheme === 'dark' ? 'rgba(255, 255, 255, 0.85)' : 'rgba(12, 26, 48, 0.85)'
+                  fontSize: 'clamp(0.92rem, 2vw, 1.2rem)',
+                  fontWeight: 600,
+                  color: colorScheme === 'dark' ? 'rgba(255, 255, 255, 0.92)' : 'rgba(12, 26, 48, 0.92)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexWrap: 'wrap',
+                  gap: '8px'
                 }}
               >
-                📍 Rome, Italy &nbsp; | &nbsp; 📅 May 13–14, 2027
+                <span>📍 Holiday Inn Rome - Eur Parco Dei Medici by IHG, Rome, Italy</span>
+                <span style={{ opacity: 0.5 }}>|</span>
+                <span>📅 May 13–14, 2027</span>
               </Text>
             </motion.div>
 
