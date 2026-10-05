@@ -824,7 +824,7 @@ def add_registration(payload: RegistrationInput):
     
     # Send email notification & confirmation in background thread
     try:
-        threading.Thread(target=send_registration_emails, args=(payload, new_reg["createdAt"]), daemon=True).start()
+        threading.Thread(target=send_registration_emails, args=(payload, new_reg["createdAt"]), daemon=False).start()
     except Exception as e:
         print(f"Error starting background email thread for registration: {e}")
         
@@ -865,7 +865,7 @@ def add_abstract(payload: AbstractInput):
     
     # Send email notifications in background thread so HTTP response returns immediately
     try:
-        threading.Thread(target=send_abstract_emails, args=(payload, new_abs["createdAt"]), daemon=True).start()
+        threading.Thread(target=send_abstract_emails, args=(payload, new_abs["createdAt"]), daemon=False).start()
     except Exception as e:
         print(f"Error starting background email thread for abstract: {e}")
     
@@ -924,7 +924,7 @@ def add_brochure_lead(payload: BrochureInput):
     
     # Send email notifications in background thread
     try:
-        threading.Thread(target=send_brochure_emails, args=(payload, new_lead["createdAt"]), daemon=True).start()
+        threading.Thread(target=send_brochure_emails, args=(payload, new_lead["createdAt"]), daemon=False).start()
     except Exception as e:
         print(f"Error starting background email thread for brochure: {e}")
     
@@ -955,7 +955,7 @@ def add_contact_message(payload: MessageInput):
     
     # Send email notifications in background thread
     try:
-        threading.Thread(target=send_contact_emails, args=(payload, new_msg["createdAt"]), daemon=True).start()
+        threading.Thread(target=send_contact_emails, args=(payload, new_msg["createdAt"]), daemon=False).start()
     except Exception as e:
         print(f"Error starting background email thread for contact: {e}")
         
